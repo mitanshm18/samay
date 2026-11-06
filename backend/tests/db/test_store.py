@@ -11,11 +11,11 @@ from types import ModuleType
 from typing import Any
 
 import pytest
-from dbhelpers import EXAMPLES, GOLDEN, example
 from sqlalchemy import Engine, func, select, text
 from sqlalchemy.exc import IntegrityError, InternalError
 from sqlalchemy.orm import Session
 
+from dbhelpers import EXAMPLES, GOLDEN, example
 from samay import cli
 from samay.core import DataStatus, Traced
 from samay.db import (
