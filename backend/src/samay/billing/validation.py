@@ -128,6 +128,14 @@ def validate_bill(bill: BillInput, tariff: Tariff) -> tuple[ValidationIssue, ...
             warning("input-missing", f"{name} is missing: {value.note}")
         elif value.provenance is Provenance.ESTIMATED:
             warning("input-estimated", f"{name} is an estimate: {value.note}")
+    for printed in bill.printed_lines:
+        if printed.amount.provenance is Provenance.ESTIMATED:
+            warning(
+                "input-estimated",
+                f"printed line {printed.label!r} is an estimate: {printed.amount.note}",
+            )
+    if bill.printed_total is not None and bill.printed_total.provenance is Provenance.ESTIMATED:
+        warning("input-estimated", f"the printed total is an estimate: {bill.printed_total.note}")
     if bill.zones is not None:
         for zone, value in bill.zones.items():
             if value.provenance is Provenance.ESTIMATED:

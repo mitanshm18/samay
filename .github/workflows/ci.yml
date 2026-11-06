@@ -54,3 +54,8 @@ jobs:
 
       - name: Tests with branch coverage (at least 95%)
         run: make backend-test
+
+      # Fails on purpose until the three golden bills are hand-checked and
+      # signed off (decision 0004, D8). Do not skip or disable it.
+      - name: Golden-bill merge gate (hand-checked bills)
+        run: make backend-golden

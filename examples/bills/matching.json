@@ -1,0 +1,29 @@
+{
+  "format": "samay.bill/1",
+  "bill_id": "EXAMPLE-MATCHING",
+  "tariff_id": "SAMAY-DEMO-1",
+  "data_status": "synthetic",
+  "period": {"meter_id": "M-EX1", "start": "2026-04-01T00:00:00+05:30", "end": "2026-05-01T00:00:00+05:30"},
+  "readings": {
+    "contract_demand_kva": {"value": "500.000", "provenance": "entered", "note": "example: sanctioned load letter"},
+    "recorded_md_kva": {"value": "412.345", "provenance": "extracted", "note": "example bill p.1, recorded MD"},
+    "kwh": {"value": "90000.000", "provenance": "extracted", "note": "example bill p.1, kWh"},
+    "kvah": {"value": "100000.000", "provenance": "extracted", "note": "example bill p.1, kVAh"},
+    "tod_kvah": {
+      "peak": {"value": "25000.000", "provenance": "extracted", "note": "example bill p.2, peak"},
+      "off_peak": {"value": "30000.000", "provenance": "extracted", "note": "example bill p.2, off-peak"},
+      "normal": {"value": "45000.000", "provenance": "extracted", "note": "example bill p.2, normal"}
+    }
+  },
+  "printed": {
+    "lines": [
+      {"code": "demand_charge", "label": "Demand charge", "amount_rupees": {"value": "164938.00", "provenance": "extracted", "note": "example bill p.1 line 1"}},
+      {"code": "excess_demand_charge", "label": "Excess demand", "amount_rupees": {"value": "0.00", "provenance": "extracted", "note": "example bill p.1 line 2"}},
+      {"code": "energy_charge", "label": "Energy charge", "amount_rupees": {"value": "900000.00", "provenance": "extracted", "note": "example bill p.1 line 3"}},
+      {"code": "tod_adjustment", "label": "ToD adjustment", "amount_rupees": {"value": "7500.00", "provenance": "extracted", "note": "example bill p.1 line 4"}},
+      {"code": "electricity_duty", "label": "Electricity duty", "amount_rupees": {"value": "53621.90", "provenance": "extracted", "note": "example bill p.1 line 5"}},
+      {"code": "rounding_off", "label": "Rounding off", "amount_rupees": {"value": "0.10", "provenance": "extracted", "note": "example bill p.1 line 6"}}
+    ],
+    "total_rupees": {"value": "1126060.00", "provenance": "extracted", "note": "example bill p.1, amount payable"}
+  }
+}

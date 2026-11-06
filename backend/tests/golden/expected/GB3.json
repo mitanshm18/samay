@@ -1,0 +1,55 @@
+{
+  "bill_id": "GB3",
+  "checked_by": null,
+  "checked_on": null,
+  "calculation": {
+    "billing_demand_kva": null,
+    "lines_paise": {
+      "demand_charge": null,
+      "excess_demand_charge": null,
+      "energy_charge": null,
+      "tod_adjustment": null,
+      "electricity_duty": null,
+      "rounding_off": null
+    },
+    "other_lines_paise": null,
+    "subtotal_paise": null,
+    "total_paise": null
+  },
+  "reconciliation": {
+    "lines": {
+      "demand_charge": {
+        "status": null,
+        "difference_paise": null
+      },
+      "excess_demand_charge": {
+        "status": null,
+        "difference_paise": null
+      },
+      "energy_charge": {
+        "status": null,
+        "difference_paise": null
+      },
+      "tod_adjustment": {
+        "status": null,
+        "difference_paise": null
+      },
+      "electricity_duty": {
+        "status": null,
+        "difference_paise": null
+      },
+      "rounding_off": {
+        "status": null,
+        "difference_paise": null
+      },
+      "other": {
+        "status": null,
+        "difference_paise": null
+      }
+    },
+    "total_difference_paise": null,
+    "printed_lines_residual_paise": null,
+    "explanation": null,
+    "exit_code": null
+  }
+}
