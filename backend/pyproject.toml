@@ -41,7 +41,8 @@ exclude_also = ["if TYPE_CHECKING:", "raise AssertionError", "@overload"]
 [tool.mypy]
 strict = true
 python_version = "3.13"
-mypy_path = "src"
+# tests/billing holds a shared helper module (bills.py) imported by its tests.
+mypy_path = "src:tests/billing"
 explicit_package_bases = true
 files = ["src", "tests"]
 warn_unreachable = true

@@ -54,8 +54,9 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 | Step | Scope | Status |
 | --- | --- | --- |
 | 1 | Skeleton, docs, Makefile, CI, read-only doctor | Done (PR #1) |
-| 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | This step |
-| 3 | Synthetic tariff SAMAY-DEMO-1, `recompute_bill`, `reconcile` | Not started |
+| 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | Done (PR #2) |
+| 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | This step |
+| 3B | `reconcile`, JSON command line, golden bills checked by hand | Not started |
 | 4 | Isolated database (`make db-up`) and migrations | Not started |
 | 5 | API | Not started |
 | 6 | Front end | Not started |
@@ -64,5 +65,8 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 Step 2 was originally "Backend project with uv" and Step 3 "Calculation core".
 They were re-scoped on 6 Nov 2026: Step 2 now includes the core types, and Step 3 is
 the synthetic tariff with bill recomputation and reconciliation.
+
+Step 3 was split into 3A and 3B on 6 Nov 2026 (decision 0003). 3B starts only after
+3A is reviewed and merged, and 3B cannot merge until the golden bills are checked by hand.
 
 Each step needs separate approval before it starts.

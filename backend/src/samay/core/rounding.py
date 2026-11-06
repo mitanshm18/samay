@@ -53,6 +53,8 @@ def round_paise(amount_paise: Decimal, rule: RoundingRule) -> int:
         raise TypeError(f"rule must be a RoundingRule, got {type(rule).__name__}")
     if not isinstance(amount_paise, Decimal) or not amount_paise.is_finite():
         raise TypeError("amount_paise must be a finite Decimal")
+    if amount_paise.adjusted() > 80:
+        raise PrecisionError(f"{amount_paise} paise has too many digits to round exactly")
     try:
         # Exact division (scaling by 1 or 100). EXACT raises rather than round,
         # so the named rule below is the only rounding that ever happens.
