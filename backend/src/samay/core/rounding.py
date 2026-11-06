@@ -4,10 +4,13 @@ Every rounding is requested by name. There is no default rule: a caller that
 turns an exact amount into Money must say how to round it.
 """
 
-from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal, Inexact
 from enum import Enum
 
-from ._decimal import ROUNDING
+from ._decimal import EXACT, ROUNDING
+from .errors import PrecisionError
+
+_ONE = Decimal(1)
 
 
 class RoundingRule(Enum):
@@ -50,11 +53,14 @@ def round_paise(amount_paise: Decimal, rule: RoundingRule) -> int:
         raise TypeError(f"rule must be a RoundingRule, got {type(rule).__name__}")
     if not isinstance(amount_paise, Decimal) or not amount_paise.is_finite():
         raise TypeError("amount_paise must be a finite Decimal")
-    quantum = Decimal(rule.quantum_paise)
-    steps = ROUNDING.divide(amount_paise, quantum).quantize(
-        Decimal(1), rounding=rule.decimal_mode, context=ROUNDING
-    )
-    return int(steps) * rule.quantum_paise
+    try:
+        # Exact division (scaling by 1 or 100). EXACT raises rather than round,
+        # so the named rule below is the only rounding that ever happens.
+        steps = EXACT.divide(amount_paise, Decimal(rule.quantum_paise))
+    except Inexact:
+        raise PrecisionError(f"{amount_paise} paise has too many digits to round exactly") from None
+    whole = steps.quantize(_ONE, rounding=rule.decimal_mode, context=ROUNDING)
+    return int(whole) * rule.quantum_paise
 
 
 class QuantityRounding(Enum):

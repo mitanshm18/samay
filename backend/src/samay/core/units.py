@@ -26,8 +26,9 @@ from .errors import InvalidValueError, PrecisionError, UnitMismatchError
 from .rounding import QuantityRounding
 
 MAX_PLACES = 3
-_MAGNITUDE_LIMIT = Decimal(10) ** 15
+_MAGNITUDE_LIMIT = Decimal("1E+15")
 _THOUSAND = Decimal(1000)
+_QUANTUM = Decimal("0.001")  # 10 ** -MAX_PLACES
 
 
 class Unit(Enum):
@@ -54,7 +55,7 @@ class Quantity:
         check_magnitude(number, _MAGNITUDE_LIMIT, what=what)
         if number < 0:
             raise InvalidValueError(f"{what}: {number} is negative")
-        self._value = number + 0  # normalises -0 to 0
+        self._value = EXACT.add(number, Decimal(0))  # normalises -0 to 0, exactly
 
     @property
     def value(self) -> Decimal:
@@ -149,9 +150,7 @@ def _product[Q: Quantity](
                 f"{result.__name__}: {a} x {b} = {exact} is not exact at {MAX_PLACES} decimal "
                 "places; use energy_over(duration, rounding=...) to round explicitly"
             )
-        exact = exact.quantize(
-            Decimal(1).scaleb(-MAX_PLACES), rounding=rounding.value, context=ROUNDING
-        )
+        exact = exact.quantize(_QUANTUM, rounding=rounding.value, context=ROUNDING)
     return result(exact)
 
 
@@ -284,7 +283,7 @@ class PowerFactor:
             twice == scaled.denominator and (rounding is QuantityRounding.HALF_UP or whole % 2 == 1)
         ):
             whole += 1
-        return Decimal(whole).scaleb(-places)
+        return EXACT.scaleb(Decimal(whole), -places)
 
     def _other(self, other: object) -> Fraction | None:
         return other._ratio if isinstance(other, PowerFactor) else None

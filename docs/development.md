@@ -33,6 +33,8 @@ tools: pytest, Hypothesis, coverage, ruff, mypy) from the exact versions in
 `backend/uv.lock`. Nothing is installed globally and no Python is downloaded
 (`UV_PYTHON_DOWNLOADS=never`). To remove it: `rm -rf backend/.venv`.
 
+Known technical debt is tracked in [backlog.md](backlog.md).
+
 Property tests use Hypothesis. `HYPOTHESIS_PROFILE=ci` (used in CI) is derandomised so runs
 repeat exactly; `HYPOTHESIS_PROFILE=thorough` runs 5,000 examples per property.
 

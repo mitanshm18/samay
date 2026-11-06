@@ -28,6 +28,18 @@ and silent rounding makes bills impossible to reconcile line by line.
    interval, with kVAh > 0 and kWh <= kVAh. It is held as an exact fraction; rounding it
    for display or a tariff threshold is a separate, explicit step.
 9. **Provenance and data status are separate.** A calculated value can also be synthetic.
+10. **The core never uses Python's shared decimal context.** Decimal operators such as `+`,
+    unary `-`, `abs()` and `scaleb()` follow the thread's current context, which any code can
+    change (`decimal.getcontext().prec = 4`). All core arithmetic is therefore done through two
+    private contexts with fixed settings: `EXACT` (precision 100, raises instead of rounding)
+    and `ROUNDING` (used only by `quantize` with the caller's named rule). Regression tests run
+    the core under hostile shared contexts and require identical results, and the test suite
+    fails any test that leaks a modified context. (Added after the PR #2 review: with precision
+    4, ₹7.355/kWh × 1,234.567 kWh had silently become 908,343 paise instead of 908,024.)
+11. **Rounding happens exactly once.** `round_paise` divides with `EXACT`, so an amount with
+    more digits than the core can hold raises `PrecisionError` instead of being pre-rounded
+    (which could turn 12.4999… into 12.5 and then 13). `ExactAmount` holds at most 12 decimal
+    places of paise.
 
 ## Consequences
 

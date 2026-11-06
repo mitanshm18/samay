@@ -28,6 +28,8 @@ Pure Python, standard library only: no I/O, database, network or clock access.
 Rules the code enforces (and tests prove):
 
 - Money is integer **paise**. Binary floats are refused everywhere.
+- Decimal arithmetic never uses Python's shared decimal context, so other code changing
+  `decimal.getcontext()` cannot alter any result (decision 0002, rule 10).
 - `Rate x quantity` gives an `ExactAmount`; it becomes `Money` only via `.round(rule)`
   with an explicit `RoundingRule`. There is no default and no implicit rounding.
   See [decisions/0002-money-and-rounding.md](decisions/0002-money-and-rounding.md).

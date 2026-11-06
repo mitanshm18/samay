@@ -18,6 +18,9 @@ from .units import Quantity, Unit
 
 MAX_ABS_PAISE = 10**18
 _PAISE_LIMIT = Decimal(MAX_ABS_PAISE)
+# ExactAmount precision: rates have at most 6 places in paise and quantities 3,
+# so real products need at most 9; percentages add at most 8. 12 leaves headroom.
+MAX_EXACT_PLACES = 12
 _RATE_PLACES = 6  # decimal places allowed in paise per unit
 _PERCENT_PLACES = 6
 _HUNDRED = Decimal(100)
@@ -88,13 +91,13 @@ class Money:
 
     def to_rupees(self) -> Decimal:
         """Exact rupees with two decimal places, e.g. Decimal('735.00')."""
-        return Decimal(self.paise).scaleb(-2)
+        return EXACT.scaleb(Decimal(self.paise), -2)
 
     def apply_percent(self, percent: DecimalInput, *, rule: RoundingRule) -> Money:
         """percent % of this amount, rounded with rule (e.g. 7.5 for 7.5%)."""
         number = to_decimal(percent, what="percent")
         check_places(number, _PERCENT_PLACES, what="percent")
-        check_magnitude(number, Decimal(10) ** 6, what="percent")
+        check_magnitude(number, Decimal("1E+6"), what="percent")
         exact = EXACT.divide(EXACT.multiply(Decimal(self.paise), number), _HUNDRED)
         return ExactAmount(exact).round(rule)
 
@@ -152,6 +155,7 @@ class ExactAmount:
         if not isinstance(self.paise, Decimal) or not self.paise.is_finite():
             raise TypeError("ExactAmount holds a finite Decimal number of paise")
         check_magnitude(self.paise, _PAISE_LIMIT, what="ExactAmount")
+        check_places(self.paise, MAX_EXACT_PLACES, what="ExactAmount (paise)")
 
     @classmethod
     def from_rupees(cls, rupees: DecimalInput) -> ExactAmount:
@@ -170,7 +174,7 @@ class ExactAmount:
         return ExactAmount(EXACT.subtract(self.paise, other.paise))
 
     def __neg__(self) -> ExactAmount:
-        return ExactAmount(-self.paise)
+        return ExactAmount(EXACT.minus(self.paise))
 
     def round(self, rule: RoundingRule) -> Money:
         """The only way to turn an exact amount into Money: with a named rule."""
@@ -190,13 +194,13 @@ class Rate:
         if not isinstance(self.unit, Unit):
             raise TypeError("Rate.unit must be a Unit")
         check_places(self.paise_per_unit, _RATE_PLACES, what="Rate (paise per unit)")
-        check_magnitude(self.paise_per_unit, Decimal(10) ** 9, what="Rate (paise per unit)")
+        check_magnitude(self.paise_per_unit, Decimal("1E+9"), what="Rate (paise per unit)")
 
     @classmethod
     def rupees_per(cls, rupees: DecimalInput, unit: Unit) -> Rate:
         """E.g. Rate.rupees_per('7.355', Unit.KWH) for ₹7.355 per kWh."""
         number = to_decimal(rupees, what="Rate.rupees_per")
-        check_magnitude(number, Decimal(10) ** 7, what="Rate.rupees_per")
+        check_magnitude(number, Decimal("1E+7"), what="Rate.rupees_per")
         return cls(EXACT.multiply(number, _HUNDRED), unit)
 
     @classmethod
