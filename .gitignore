@@ -1,0 +1,39 @@
+# Local settings and secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Real customer bills and anything private: never commit
+private-data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+htmlcov/
+.coverage
+.coverage.*
+
+# Node / front end
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+
+# Generated or downloaded data (re-created by scripts)
+data/public/
+data/synthetic/
+backend/var/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp

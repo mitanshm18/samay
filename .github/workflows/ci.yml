@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax and shellcheck
+        run: |
+          bash -n scripts/doctor.sh
+          shellcheck scripts/*.sh
+
+      - name: Helper script tests
+        run: python3 -m unittest discover -s scripts/tests -v
+
+      - name: Docker isolation check (renders compose.yaml, starts nothing)
+        run: docker compose --env-file .env.example config --format json | python3 scripts/check_docker_scope.py
+
+      - name: Doctor (CI mode, read-only)
+        run: bash scripts/doctor.sh --ci
