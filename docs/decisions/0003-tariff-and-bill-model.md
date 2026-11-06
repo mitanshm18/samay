@@ -39,6 +39,32 @@ tariff is the synthetic SAMAY-DEMO-1.
 10. **Rate basis (backlog #10).** `Rate` carries a `RateBasis`: the demand rate is
     `PER_UNIT_PER_BILLING_PERIOD`. There is no proration by period length.
 
+11. **Supported rate precision is checked when a tariff is created (review M1).** SAMAY
+    never rounds an intermediate value, so a tariff is refused up front if any charge
+    could need more places than the exact types hold:
+
+    | Parameter | Limit |
+    | --- | --- |
+    | Any rate | at most 6 decimal places of paise (₹0.000001 per 100) and below 1E+9 paise |
+    | Demand floor % | at most 2 decimal places |
+    | Duty % | at most 6 decimal places |
+    | Excess multiplier | at most 3 decimal places |
+    | Demand rate + floor % | rate places + floor places + 5 <= 12 (billing demand can have 3 + floor + 2 places) |
+    | Demand rate x excess multiplier | must be a valid rate: rate places + multiplier places <= 6, below 1E+9 paise |
+
+    Energy and ToD charges (rate <= 6 places x kVAh 3 places = 9) and duty (paise x
+    percent / 100 <= 8 places) always fit. Trailing zeros do not count. A tariff that is
+    accepted therefore never fails part-way through a bill because of its own precision;
+    a property test checks this against an independent Fraction calculation. (Absurdly
+    large *inputs* can still be refused with InvalidValueError; that is an input error.)
+12. **ToD rates are per kVAh used (review M2).** A ToD rate must be `RateBasis.PER_UNIT`.
+13. **Nothing is labelled ENTERED unless someone entered it (review M3).** With no printed
+    `other` lines, `not_recalculated_total` is MISSING ("nothing was taken as printed"),
+    never an invented zero. An absent printed total stays `None`.
+14. **Estimates are visible (review M4).** Lines and the breakdown expose
+    `rests_on_estimate` and `estimate_bases` (the stated basis of each estimate), and
+    validation adds an `input-estimated` warning for each estimated reading.
+
 ## Consequences
 
 - Adding a real tariff means writing a `Tariff` value with a source for every component

@@ -22,7 +22,7 @@ _PAISE_LIMIT = Decimal(MAX_ABS_PAISE)
 # ExactAmount precision: rates have at most 6 places in paise and quantities 3,
 # so real products need at most 9; percentages add at most 8. 12 leaves headroom.
 MAX_EXACT_PLACES = 12
-_RATE_PLACES = 6  # decimal places allowed in paise per unit
+MAX_RATE_PLACES = 6  # decimal places allowed in paise per unit
 _PERCENT_PLACES = 6
 _HUNDRED = Decimal(100)
 _RUPEE_LIMIT = Decimal("1E+16")  # MAX_ABS_PAISE in rupees
@@ -234,7 +234,7 @@ class Rate:
             raise TypeError("Rate.unit must be a Unit")
         if not isinstance(self.basis, RateBasis):
             raise TypeError("Rate.basis must be a RateBasis")
-        check_places(self.paise_per_unit, _RATE_PLACES, what="Rate (paise per unit)")
+        check_places(self.paise_per_unit, MAX_RATE_PLACES, what="Rate (paise per unit)")
         check_magnitude(self.paise_per_unit, Decimal("1E+9"), what="Rate (paise per unit)")
 
     @classmethod

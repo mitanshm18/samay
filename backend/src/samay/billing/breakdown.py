@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from samay.core import DataStatus, ExactAmount, Money, RoundingRule, Traced
+from samay.core import DataStatus, ExactAmount, Money, Provenance, RoundingRule, Traced
 from samay.tariffs import Assumption, ComponentCode
 
 from .validation import ValidationIssue
@@ -49,6 +49,18 @@ class MoneyLine:
     def is_missing(self) -> bool:
         return self.amount.is_missing
 
+    @property
+    def rests_on_estimate(self) -> bool:
+        """True if this amount was derived from (or is) an ESTIMATED value."""
+        return self.amount.rests_on_estimate
+
+    @property
+    def estimate_bases(self) -> tuple[str, ...]:
+        """The stated basis of each estimate behind this amount (empty if none)."""
+        return tuple(
+            leaf.note for leaf in self.amount.leaves() if leaf.provenance is Provenance.ESTIMATED
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class BillBreakdown:
@@ -90,14 +102,41 @@ class BillBreakdown:
         return not self.total.is_missing
 
     @property
+    def not_recalculated_lines(self) -> tuple[MoneyLine, ...]:
+        """The lines taken as printed, not recalculated (printed 'other' lines)."""
+        return tuple(line for line in self.charges if line.basis is LineBasis.NOT_RECALCULATED)
+
+    @property
     def not_recalculated_total(self) -> Traced[Money]:
-        """The sum of lines taken as printed: 'Rs X taken as printed and not checked'."""
-        passed = [line.amount for line in self.charges if line.basis is LineBasis.NOT_RECALCULATED]
+        """The sum of lines taken as printed: 'Rs X taken as printed and not checked'.
+
+        With no such lines there is no printed amount to add up, so the result
+        is MISSING with that reason. It is never a made-up ENTERED zero (M3);
+        a report shows "nothing taken as printed" instead of an amount.
+        """
+        passed = [line.amount for line in self.not_recalculated_lines]
         if not passed:
-            return Traced.entered(
-                Money.zero(), by="no printed 'other' lines", status=self.tariff_status
+            return Traced.missing(
+                reason="no printed 'other' lines: nothing was taken as printed",
+                status=self.tariff_status,
+                kind=Money,
             )
         return Traced.derive(_sum, *passed, description="lines taken as printed")
+
+    @property
+    def rests_on_estimate(self) -> bool:
+        """True if the total, or any line, depends on an ESTIMATED input."""
+        return self.total.rests_on_estimate or any(line.rests_on_estimate for line in self.lines)
+
+    @property
+    def estimate_bases(self) -> tuple[str, ...]:
+        """The stated basis of every estimate the bill rests on, in first-seen order."""
+        bases: list[str] = []
+        for line in self.lines:
+            for basis in line.estimate_bases:
+                if basis not in bases:
+                    bases.append(basis)
+        return tuple(bases)
 
 
 def _sum(*amounts: Money) -> Money:

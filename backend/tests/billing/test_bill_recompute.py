@@ -204,7 +204,13 @@ def test_pass_through_lines_are_kept_as_printed() -> None:
     # Duty is on C2..C5 only, so it does not change with pass-through lines.
     plain = recompute_bill(bill(), SAMAY_DEMO_1)
     assert paise(result.line(C.ELECTRICITY_DUTY)) == paise(plain.line(C.ELECTRICITY_DUTY))
-    assert plain.not_recalculated_total.value == Money.zero()
+    # M3: with nothing taken as printed there is no amount, and it is never a made-up 0.
+    nothing = plain.not_recalculated_total
+    assert nothing.is_missing
+    assert nothing.provenance is Provenance.MISSING
+    assert "nothing was taken as printed" in nothing.note
+    assert plain.not_recalculated_lines == ()
+    assert [line.label for line in result.not_recalculated_lines] == ["Meter rent", "Late fee"]
 
 
 def test_line_lookup() -> None:
@@ -350,3 +356,96 @@ def test_errors_stop_the_calculation() -> None:
         recompute_bill(bill(kwh="100001"), SAMAY_DEMO_1)
     assert [i.code for i in caught.value.issues] == ["kwh-above-kvah"]
     assert "kwh-above-kvah" in str(caught.value)
+
+
+# ---- M3: nothing is ever labelled ENTERED unless someone entered it -----------------
+
+
+def _leaves(result: BillBreakdown) -> list[Traced[object]]:
+    found: list[Traced[object]] = []
+    for line in result.lines:
+        found.extend(line.amount.leaves())
+    found.extend(result.not_recalculated_total.leaves())
+    return found
+
+
+def test_no_entered_values_are_invented() -> None:
+    # Every ENTERED leaf in a breakdown is one of the bill's own inputs.
+    b = bill()
+    inputs = {id(b.contract_demand), id(b.recorded_md), id(b.kwh), id(b.kvah)}
+    assert b.zones is not None
+    inputs |= {id(value) for _, value in b.zones.items()}
+    result = recompute_bill(b, SAMAY_DEMO_1)
+    for leaf in _leaves(result):
+        if leaf.provenance is Provenance.ENTERED:
+            assert id(leaf) in inputs
+    assert b.printed_total is None  # an absent printed total stays absent
+
+
+# ---- M4: estimated inputs ----------------------------------------------------------------
+
+
+def test_estimated_md_flows_to_demand_lines_and_total() -> None:
+    md = Traced.estimated(ApparentPower("512.345"), basis="MD from last month's bill", status=VER)
+    result = recompute_bill(bill(md=md), SAMAY_DEMO_1)
+    flagged = {line.code for line in result.lines if line.rests_on_estimate}
+    # MD feeds C1 -> C2, C3; they feed duty, subtotal, rounding off and the total.
+    assert flagged == {
+        C.DEMAND_CHARGE,
+        C.EXCESS_DEMAND_CHARGE,
+        C.ELECTRICITY_DUTY,
+        C.ROUNDING_OFF,
+    }
+    assert not result.line(C.ENERGY_CHARGE).rests_on_estimate
+    assert not result.line(C.TOD_ADJUSTMENT).rests_on_estimate
+    assert result.quantity("billing_demand").value.rests_on_estimate
+    assert result.subtotal.rests_on_estimate
+    assert result.total.rests_on_estimate
+    assert result.rests_on_estimate
+    # The outputs name the basis of the estimate.
+    assert result.line(C.DEMAND_CHARGE).estimate_bases == ("MD from last month's bill",)
+    assert result.estimate_bases == ("MD from last month's bill",)
+    assert result.line(C.ENERGY_CHARGE).estimate_bases == ()
+    # Estimated values are still calculated, never treated as missing or zero.
+    assert result.line(C.DEMAND_CHARGE).amount.provenance is Provenance.CALCULATED
+    # Same numbers as without the estimate: C2 20,493,800 + C3 740,700 + C4 90,000,000
+    # + C5 750,000 = 111,984,500; duty 5,599,225; subtotal 117,583,725 -> 117,583,700.
+    assert result.total.value == Money(117_583_700)
+    issues = [i for i in result.issues if i.code == "input-estimated"]
+    assert len(issues) == 1
+    assert "recorded maximum demand is an estimate: MD from last month's bill" in issues[0].message
+
+
+def test_estimated_zone_flows_to_tod_duty_and_total() -> None:
+    estimated_zones = ZoneConsumption(
+        Traced.estimated(ApparentEnergy("25000"), basis="peak split from load profile", status=VER),
+        entered(ApparentEnergy("30000")),
+        entered(ApparentEnergy("45000")),
+    )
+    result = recompute_bill(bill(tod=estimated_zones), SAMAY_DEMO_1)
+    flagged = {line.code for line in result.lines if line.rests_on_estimate}
+    assert flagged == {C.TOD_ADJUSTMENT, C.ELECTRICITY_DUTY, C.ROUNDING_OFF}
+    assert result.total.rests_on_estimate
+    assert result.estimate_bases == ("peak split from load profile",)
+    assert result.total.value == Money(112_606_000)  # same numbers as example A
+    assert any(
+        i.code == "input-estimated" and "peak zone kVAh is an estimate" in i.message
+        for i in result.issues
+    )
+
+
+def test_estimated_pass_through_line_is_flagged() -> None:
+    rent = PrintedLine(
+        C.OTHER, "Meter rent", Traced.estimated(Money(25_000), basis="usual rent", status=VER)
+    )
+    result = recompute_bill(bill(printed=(rent,)), SAMAY_DEMO_1)
+    assert result.charges[-1].rests_on_estimate
+    assert result.total.rests_on_estimate
+    assert not result.line(C.ELECTRICITY_DUTY).rests_on_estimate  # not in the duty base
+
+
+def test_no_estimates_means_no_flags() -> None:
+    result = recompute_bill(bill(), SAMAY_DEMO_1)
+    assert not result.rests_on_estimate
+    assert result.estimate_bases == ()
+    assert not any(i.code == "input-estimated" for i in result.issues)

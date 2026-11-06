@@ -13,7 +13,14 @@ from decimal import Decimal
 from enum import Enum
 
 from samay.core import DataStatus, Rate, RateBasis, RoundingRule, SamayCoreError, Unit
-from samay.core._decimal import DecimalInput, check_places, to_decimal
+from samay.core._decimal import DecimalInput, check_places, decimal_places, to_decimal
+from samay.core.money import MAX_EXACT_PLACES, MAX_RATE_PLACES
+from samay.core.units import MAX_PLACES as QUANTITY_PLACES
+
+# Decimal places allowed in tariff percentages and multipliers.
+FLOOR_PERCENT_PLACES = 2
+DUTY_PERCENT_PLACES = 6
+MULTIPLIER_PLACES = 3
 
 
 class TariffError(SamayCoreError, ValueError):
@@ -119,6 +126,11 @@ class TodRate:
         _text(self.hours, "TodRate.hours")
         if not isinstance(self.rate, Rate) or self.rate.unit is not Unit.KVAH:
             raise TariffError(f"ToD rate for {self.zone.value} must be a Rate per kVAh")
+        if self.rate.basis is not RateBasis.PER_UNIT:
+            raise TariffError(
+                f"ToD rate for {self.zone.value} must be charged {RateBasis.PER_UNIT.value} "
+                f"(per kVAh used), not {self.rate.basis.value}"
+            )
 
 
 def _percent(value: DecimalInput, places: int, what: str) -> Decimal:
@@ -159,13 +171,17 @@ class Tariff:
         object.__setattr__(
             self,
             "demand_floor_percent",
-            _percent(self.demand_floor_percent, 2, "Tariff.demand_floor_percent"),
+            _percent(
+                self.demand_floor_percent, FLOOR_PERCENT_PLACES, "Tariff.demand_floor_percent"
+            ),
         )
         object.__setattr__(
-            self, "duty_percent", _percent(self.duty_percent, 6, "Tariff.duty_percent")
+            self,
+            "duty_percent",
+            _percent(self.duty_percent, DUTY_PERCENT_PLACES, "Tariff.duty_percent"),
         )
         multiplier = to_decimal(self.excess_demand_multiplier, what="excess_demand_multiplier")
-        check_places(multiplier, 3, what="excess_demand_multiplier")
+        check_places(multiplier, MULTIPLIER_PLACES, what="excess_demand_multiplier")
         if multiplier < 0 or multiplier > 100:
             raise TariffError(f"excess_demand_multiplier: {multiplier} is outside 0 to 100")
         object.__setattr__(self, "excess_demand_multiplier", multiplier)
@@ -194,6 +210,8 @@ class Tariff:
         ):
             raise TariffError("Tariff.assumptions must be a tuple of Assumption")
 
+        self._check_precision()
+
         if self.status is DataStatus.VERIFIED:
             unsourced = [c.code.value for c in self.components if c.source is None]
             if unsourced:
@@ -201,6 +219,45 @@ class Tariff:
                     f"a VERIFIED tariff needs a source for every component; missing: "
                     f"{', '.join(unsourced)}"
                 )
+
+    def _check_precision(self) -> None:
+        """Reject rate combinations that could not be calculated exactly (M1).
+
+        SAMAY never rounds an intermediate value, so every product must fit the
+        exact types: a Rate holds at most MAX_RATE_PLACES (6) decimal places of
+        paise and an ExactAmount at most MAX_EXACT_PLACES (12). Each charge's
+        worst case, with quantities of QUANTITY_PLACES (3) places:
+
+        - demand charge: rate x (contract demand x floor% / 100) has
+          rate places + 3 + floor% places + 2 places;
+        - excess demand: the scaled rate (rate x multiplier) must itself be a
+          valid Rate: rate places + multiplier places <= 6, and below 1E+9 paise;
+        - energy and ToD: rate (<= 6) x kVAh (3) <= 9, always fits;
+        - duty: whole paise x duty% (<= 6 places) / 100 <= 8, always fits.
+
+        Checking here means a tariff that is accepted can never fail half-way
+        through a bill because of its own precision.
+        """
+        rate_places = decimal_places(self.demand_rate.paise_per_unit)
+        floor_places = decimal_places(self.demand_floor_percent)
+        demand_places = rate_places + QUANTITY_PLACES + floor_places + 2
+        if demand_places > MAX_EXACT_PLACES:
+            raise TariffError(
+                f"the demand rate ({rate_places} decimal places of paise) and demand floor "
+                f"({floor_places} decimal places of percent) could need {demand_places} "
+                f"decimal places of paise, more than the {MAX_EXACT_PLACES} SAMAY holds "
+                "exactly; use fewer decimal places in one of them"
+            )
+        excess_places = rate_places + decimal_places(self.excess_demand_multiplier)
+        if excess_places > MAX_RATE_PLACES:
+            raise TariffError(
+                f"the demand rate x excess multiplier needs {excess_places} decimal places "
+                f"of paise, more than the {MAX_RATE_PLACES} a rate holds exactly"
+            )
+        try:  # the excess rate must also be within the supported size of a Rate
+            self.demand_rate.scaled(self.excess_demand_multiplier)
+        except SamayCoreError as error:
+            raise TariffError(f"the excess demand rate is not supported: {error}") from None
 
     @staticmethod
     def _check_rate(rate: object, unit: Unit, basis: RateBasis, what: str) -> None:

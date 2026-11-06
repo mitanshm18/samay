@@ -124,3 +124,74 @@ def test_part_validation() -> None:
         TodRate(TodZone.PEAK, "18-22", Rate.rupees_per("1", Unit.KWH))
     assert str(Assumption("k", "text")) == "[k] text"
     assert str(SourceRef("Order", "p. 2")) == "Order, p. 2"
+
+
+# ---- M1: precision is checked when the tariff is created ---------------------------
+
+
+def _demand_rate(paise: str) -> Rate:
+    return Rate.paise_per(paise, Unit.KVA, RateBasis.PER_UNIT_PER_BILLING_PERIOD)
+
+
+def test_rate_too_precise_for_excess_multiplier_rejected_at_creation() -> None:
+    # 40000.123457 has 6 places; x 1.5 needs 7 (60000.1851855), more than a Rate holds.
+    with pytest.raises(TariffError, match="excess multiplier needs 7 decimal places"):
+        dataclasses.replace(T, demand_rate=_demand_rate("40000.123457"))
+    # 5 places x 1.5 (1 place) = 6 places: accepted.
+    dataclasses.replace(T, demand_rate=_demand_rate("40000.12345"))
+    # A whole multiplier adds no places, so 6-place rates are fine with it.
+    dataclasses.replace(
+        T, demand_rate=_demand_rate("40000.123457"), excess_demand_multiplier=Decimal(2)
+    )
+
+
+def test_rate_and_floor_too_precise_together_rejected_at_creation() -> None:
+    # Worst case: rate (6) + CD (3) + floor % (2) + /100 (2) = 13 places > 12.
+    with pytest.raises(TariffError, match="could need 13 decimal places"):
+        dataclasses.replace(
+            T,
+            demand_rate=_demand_rate("40000.123457"),
+            demand_floor_percent=Decimal("62.55"),
+            excess_demand_multiplier=Decimal(2),
+        )
+    # 5 + 3 + 2 + 2 = 12: the limit, accepted.
+    dataclasses.replace(
+        T, demand_rate=_demand_rate("40000.12345"), demand_floor_percent=Decimal("62.55")
+    )
+
+
+def test_trailing_zeros_do_not_count_as_precision() -> None:
+    dataclasses.replace(
+        T, demand_rate=_demand_rate("40000.123450"), demand_floor_percent=Decimal("62.50")
+    )
+
+
+# ---- M2: ToD rates are charged per kVAh used ----------------------------------------
+
+
+@pytest.mark.parametrize("zone", list(TodZone))
+def test_tod_rate_basis_must_be_per_unit(zone: TodZone) -> None:
+    with pytest.raises(TariffError, match="per unit"):
+        TodRate(zone, "x", Rate.rupees_per("1.5", Unit.KVAH, RateBasis.PER_UNIT_PER_BILLING_PERIOD))
+    assert TodRate(zone, "x", Rate.rupees_per("1.5", Unit.KVAH)).rate.basis is RateBasis.PER_UNIT
+    assert (
+        TodRate(zone, "x", Rate.rupees_per("1.5", Unit.KVAH, RateBasis.PER_UNIT)).rate.basis
+        is RateBasis.PER_UNIT
+    )
+
+
+def test_every_rate_basis_is_validated() -> None:
+    per_period_energy = Rate.rupees_per("9", Unit.KVAH, RateBasis.PER_UNIT_PER_BILLING_PERIOD)
+    with pytest.raises(TariffError, match="energy rate"):
+        dataclasses.replace(T, energy_rate=per_period_energy)
+    with pytest.raises(TariffError, match="demand rate"):
+        dataclasses.replace(T, demand_rate=Rate.rupees_per("400", Unit.KVA, RateBasis.PER_UNIT))
+
+
+def test_excess_rate_too_large_rejected_at_creation() -> None:
+    # Found by the precision property test: ₹2,49,596.99/kVA x 100 is above the
+    # Rate size limit (1E+9 paise), so the tariff is refused, not the bill.
+    with pytest.raises(TariffError, match="excess demand rate is not supported"):
+        dataclasses.replace(
+            T, demand_rate=_demand_rate("24959699"), excess_demand_multiplier=Decimal(100)
+        )

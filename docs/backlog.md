@@ -26,3 +26,19 @@ Severity: **Minor** = should fix, low risk; **Suggestion** = optional improvemen
 Numbering follows the review document; #1 was the Major finding (fixed).
 Items marked "Done in Step 3A" stay listed until Step 3A is merged, then move to the
 changelog of that pull request.
+
+## PR #3 review (Step 3A), 6 Nov 2026
+
+Verdict SAFE TO MERGE; the four Minor findings were fixed in PR #3 itself.
+
+| # | Item | Fix |
+| --- | --- | --- |
+| M1 | A tariff with 6-decimal rates could pass validation and fail mid-bill with PrecisionError. A property test added for the fix also found a too-large excess rate failing mid-bill. | Precision and size budget checked when the tariff is created (decision 0003, item 11). |
+| M2 | ToD rate billing basis not validated. | ToD rates must be `PER_UNIT`. |
+| M3 | An empty "taken as printed" total was an invented ENTERED zero. | It is MISSING with a reason. |
+| M4 | Estimated inputs untested in billing. | Tests, `rests_on_estimate` / `estimate_bases` on lines and breakdown, `input-estimated` warning. |
+
+Open suggestions from that review, not done: S1 `ExactApparentPower ==` vs ordering,
+S2 input digit limit counts trailing zeros (and its message), S3 warn on identical
+repeated `other` lines, S4 `Rate.scaled` accepts negative multipliers, S5 test helper on
+`mypy_path`, S6 oracle covers complete data only.

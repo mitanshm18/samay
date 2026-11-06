@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 
-from samay.core import ApparentEnergy, SamayCoreError
+from samay.core import ApparentEnergy, Provenance, SamayCoreError
 from samay.tariffs import ComponentCode, Tariff
 
 from .inputs import BillInput
@@ -126,6 +126,12 @@ def validate_bill(bill: BillInput, tariff: Tariff) -> tuple[ValidationIssue, ...
     ):
         if value.is_missing:
             warning("input-missing", f"{name} is missing: {value.note}")
+        elif value.provenance is Provenance.ESTIMATED:
+            warning("input-estimated", f"{name} is an estimate: {value.note}")
+    if bill.zones is not None:
+        for zone, value in bill.zones.items():
+            if value.provenance is Provenance.ESTIMATED:
+                warning("input-estimated", f"{zone.value} zone kVAh is an estimate: {value.note}")
 
     if tariff.is_synthetic:
         warning(

@@ -25,6 +25,9 @@ C5 is the exact sum of the three zone amounts, rounded once.
 Time-of-day zones: the three zone kVAh readings must add up exactly to total kVAh. If any
 zone is missing, C5 is MISSING (never zero), and so are C6, C8, C9 and the total.
 
+SAMAY-DEMO-1 is well inside the supported rate precision (decision 0003, item 11): its
+rates are whole rupees or ₹0.50 steps, its floor and multiplier have at most 1 decimal place.
+
 Power factor is shown for information only; this tariff has no power factor charge or
 rebate. Charges are not prorated; a period shorter than 28 or longer than 31 days gives a
 warning.
