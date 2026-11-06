@@ -1,0 +1,62 @@
+{
+  "bill_id": "GB3",
+  "checked_by": "Mitansh Mathur",
+  "checked_on": "2026-11-06",
+  "calculation": {
+    "billing_demand_kva": "395.555",
+    "lines_paise": {
+      "demand_charge": "15822200",
+      "excess_demand_charge": "0",
+      "energy_charge": "59999999",
+      "tod_adjustment": "MISSING",
+      "electricity_duty": "MISSING",
+      "rounding_off": "MISSING"
+    },
+    "other_lines_paise": "125000",
+    "subtotal_paise": "MISSING",
+    "total_paise": "MISSING"
+  },
+  "reconciliation": {
+    "lines": {
+      "demand_charge": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "excess_demand_charge": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "energy_charge": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "tod_adjustment": {
+        "status": "CANNOT_COMPARE",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "printed amount is illegible; calculated amount is missing"
+      },
+      "electricity_duty": {
+        "status": "CALCULATED_ONLY",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "not printed; calculated amount is missing"
+      },
+      "rounding_off": {
+        "status": "CALCULATED_ONLY",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "not printed; calculated amount is missing"
+      },
+      "other": {
+        "status": "NOT_RECALCULATED",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "meter rent, taken as printed"
+      }
+    },
+    "printed_total_paise": "45000000",
+    "calculated_total_paise": "MISSING",
+    "total_difference_paise": "NOT DETERMINABLE",
+    "printed_lines_sum_paise": "NOT DETERMINABLE",
+    "printed_lines_residual_paise": "NOT DETERMINABLE",
+    "explanation": "PARTIAL",
+    "exit_code": "1"
+  }
+}

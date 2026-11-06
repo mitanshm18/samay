@@ -8,7 +8,9 @@ frontend/  React + TypeScript + Vite (npm), Tailwind, Radix, TanStack Query, Zod
 backend/   FastAPI (Python 3.13, uv)
     |-- core/      pure calculation code: no I/O, no database, fully unit-tested
     |-- tariffs/   tariff definitions, each marked synthetic or verified
-    |-- billing/   bill input, validation and recalculation (uses core + tariffs)
+    |-- billing/   bill input, validation, recalculation and reconciliation (uses core + tariffs)
+    |-- io/        strict JSON bill reader and report writer (samay.bill/1, samay.report/1)
+    |-- cli.py     python -m samay.cli validate|calculate|reconcile
     |-- api/       HTTP routes
     `-- db/        SQLAlchemy models + Alembic migrations (psycopg)
 PostgreSQL 16 in Docker Compose project "samay" (127.0.0.1:55432)
@@ -46,7 +48,11 @@ Rules the code enforces (and tests prove):
 - `recompute_bill(bill, tariff)` (Step 3A, `samay/billing`) validates the input, then
   computes every line exactly and rounds each once; total = sum of lines, always.
   See [decisions/0003-tariff-and-bill-model.md](decisions/0003-tariff-and-bill-model.md).
-- Planned for Step 3B: `reconcile(printed, recomputed)`.
+- `reconcile(bill, breakdown)` (Step 3B) compares each recalculated line with the
+  printed bill (MATCH, DIFFERS, CALCULATED_ONLY, CANNOT_COMPARE, NOT_RECALCULATED; zero
+  tolerance) and the totals independently, and never changes either side. See
+  [decisions/0004-reconciliation-json-cli.md](decisions/0004-reconciliation-json-cli.md),
+  [json-format.md](json-format.md) and [cli.md](cli.md).
 - The schedule optimiser (later milestone) is exhaustive and bounded: at most 8 movable
   batches, 2,000,000 combinations and 10 seconds.
 

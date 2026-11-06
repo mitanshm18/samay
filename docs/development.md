@@ -25,7 +25,9 @@ asks for a password:
 ```bash
 make doctor          # read-only check
 make backend-check   # ruff, mypy --strict, tests with branch coverage
+make backend-golden  # golden-bill merge gate: fails until the hand-check is signed off
 make check           # everything above that needs no Docker
+make bill-reconcile FILE=examples/bills/differing.json   # see cli.md
 ```
 
 The first `make backend-*` run creates `backend/.venv` (about 80-100 MB of development
@@ -55,8 +57,8 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 | --- | --- | --- |
 | 1 | Skeleton, docs, Makefile, CI, read-only doctor | Done (PR #1) |
 | 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | Done (PR #2) |
-| 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | This step |
-| 3B | `reconcile`, JSON command line, golden bills checked by hand | Not started |
+| 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | Done (PR #3) |
+| 3B | `reconcile`, JSON command line, golden bills checked by hand | This step (waiting for the golden-bill hand-check) |
 | 4 | Isolated database (`make db-up`) and migrations | Not started |
 | 5 | API | Not started |
 | 6 | Front end | Not started |

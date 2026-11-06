@@ -13,7 +13,8 @@ UV_RUN := cd backend && UV_PYTHON_DOWNLOADS=never uv run --locked
 
 .DEFAULT_GOAL := help
 .PHONY: help doctor doctor-ci check-docker-scope test-scripts lint-scripts check \
-	backend-check-uv backend-test backend-lint backend-typecheck backend-check
+	backend-check-uv backend-test backend-golden backend-lint backend-typecheck backend-check \
+	bill-check-file bill-validate bill-calculate bill-reconcile
 
 help: ## Show available commands
 	@echo "SAMAY commands (doctor and check-docker-scope are read-only)"
@@ -43,8 +44,11 @@ backend-check-uv:
 	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed; see docs/development.md"; exit 1; }
 
 backend-test: backend-check-uv ## Run backend tests with branch coverage (fails below 95%)
-	@$(UV_RUN) coverage run -m pytest
+	@$(UV_RUN) coverage run -m pytest --ignore=tests/golden
 	@$(UV_RUN) coverage report
+
+backend-golden: backend-check-uv ## Golden-bill merge gate (fails until all three bills are hand-checked)
+	@$(UV_RUN) pytest tests/golden
 
 backend-lint: backend-check-uv ## Check backend style with ruff
 	@$(UV_RUN) ruff check src tests
@@ -53,6 +57,22 @@ backend-lint: backend-check-uv ## Check backend style with ruff
 backend-typecheck: backend-check-uv ## Type-check the backend with mypy --strict
 	@$(UV_RUN) mypy
 
-backend-check: backend-lint backend-typecheck backend-test ## All backend checks
+backend-check: backend-lint backend-typecheck backend-test backend-golden ## All backend checks
 
 check: test-scripts lint-scripts backend-check ## Everything CI runs that needs no Docker
+
+# Bill commands (Step 3B). FILE is a samay.bill/1 JSON file, relative to the repo root.
+# Add FORMAT=json for JSON output. They only read FILE and print to the terminal.
+BILL_CLI = $(UV_RUN) env PYTHONPATH=src python -m samay.cli
+
+bill-check-file: backend-check-uv
+	@test -n "$(FILE)" || { echo "Give a bill file: make $(MAKECMDGOALS) FILE=examples/bills/matching.json"; exit 2; }
+
+bill-validate: bill-check-file ## Check a bill file (FILE=..., optional FORMAT=json)
+	@$(BILL_CLI) validate "$(abspath $(FILE))" --format $(or $(FORMAT),text)
+
+bill-calculate: bill-check-file ## Recalculate a bill (FILE=..., optional FORMAT=json)
+	@$(BILL_CLI) calculate "$(abspath $(FILE))" --format $(or $(FORMAT),text)
+
+bill-reconcile: bill-check-file ## Compare a printed bill with SAMAY (FILE=..., optional FORMAT=json)
+	@$(BILL_CLI) reconcile "$(abspath $(FILE))" --format $(or $(FORMAT),text)

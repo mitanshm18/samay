@@ -42,3 +42,12 @@ Open suggestions from that review, not done: S1 `ExactApparentPower ==` vs order
 S2 input digit limit counts trailing zeros (and its message), S3 warn on identical
 repeated `other` lines, S4 `Rate.scaled` accepts negative multipliers, S5 test helper on
 `mypy_path`, S6 oracle covers complete data only.
+
+## Step 3B, 6 Nov 2026
+
+| Item | Status |
+| --- | --- |
+| `input-estimated` warning for estimated printed lines and printed totals (D10) | Done in Step 3B |
+| PRINTED_ONLY status (D2) | Deferred: unreachable while every printed line has a known code; revisit if free-text printed lines are accepted |
+| `cli._banner` repeats the banner text built inside `recompute_bill` (which 3B may not change) | A test keeps them equal; share one function when `recompute.py` is next changed |
+| Suggestions #11 and #12 (immutability of quantities and `Traced` raw values) | Not done in 3B (outside the approved scope); still open |

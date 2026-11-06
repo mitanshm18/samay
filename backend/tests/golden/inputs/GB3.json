@@ -1,0 +1,49 @@
+{
+  "format": "samay.bill/1",
+  "bill_id": "GB3",
+  "tariff_id": "SAMAY-DEMO-1",
+  "data_status": "synthetic",
+  "period": {
+    "meter_id": "M-GB3",
+    "start": "2026-08-01T00:00:00+05:30",
+    "end": "2026-09-01T00:00:00+05:30"
+  },
+  "readings": {
+    "contract_demand_kva": {
+      "value": "400.000",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, contract demand"
+    },
+    "recorded_md_kva": {
+      "value": "395.555",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, recorded MD"
+    },
+    "kwh": {
+      "value": "60000.000",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, kWh"
+    },
+    "kvah": {
+      "value": "66666.666",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, kVAh"
+    },
+    "tod_kvah": {
+      "peak": {
+        "value": "13333.333",
+        "provenance": "entered",
+        "note": "golden bill 3 worksheet, peak kVAh"
+      },
+      "off_peak": {
+        "provenance": "missing",
+        "note": "golden bill 3 worksheet: off-peak kVAh not printed"
+      },
+      "normal": {
+        "value": "33333.333",
+        "provenance": "entered",
+        "note": "golden bill 3 worksheet, normal kVAh"
+      }
+    }
+  }
+}

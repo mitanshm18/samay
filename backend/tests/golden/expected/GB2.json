@@ -1,0 +1,60 @@
+{
+  "bill_id": "GB2",
+  "checked_by": "Mitansh Mathur",
+  "checked_on": "2026-11-06",
+  "calculation": {
+    "billing_demand_kva": "337.125",
+    "lines_paise": {
+      "demand_charge": "13485000",
+      "excess_demand_charge": "2227500",
+      "energy_charge": "68700000",
+      "tod_adjustment": "0",
+      "electricity_duty": "4220625",
+      "rounding_off": "-25"
+    },
+    "other_lines_paise": "125000",
+    "subtotal_paise": "88758125",
+    "total_paise": "88758100"
+  },
+  "reconciliation": {
+    "lines": {
+      "demand_charge": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "excess_demand_charge": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "energy_charge": {
+        "status": "DIFFERS",
+        "difference_paise": "1",
+        "checker_note": "printed 1 paisa higher"
+      },
+      "tod_adjustment": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "electricity_duty": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "rounding_off": {
+        "status": "MATCH",
+        "difference_paise": "0"
+      },
+      "other": {
+        "status": "NOT_RECALCULATED",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "meter rent, taken as printed"
+      }
+    },
+    "printed_total_paise": "88758100",
+    "calculated_total_paise": "88758100",
+    "total_difference_paise": "0",
+    "printed_lines_sum_paise": "88758101",
+    "printed_lines_residual_paise": "-1",
+    "explanation": "COMPLETE",
+    "exit_code": "1"
+  }
+}
