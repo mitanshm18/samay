@@ -17,6 +17,11 @@ Each value carries one of:
 | `estimated` | An explicit assumption, shown with its basis |
 | `missing` | Not available; results that depend on it say so |
 
+In code these are `samay.core.Provenance` values carried by `samay.core.Traced`.
+Every value also has a separate **data status**, `SYNTHETIC` or `VERIFIED`
+(`samay.core.DataStatus`): anything derived from a synthetic input is synthetic, and
+nothing can turn it back into verified.
+
 ## Tariffs: synthetic vs verified
 
 - **Synthetic** tariffs exist to build and test the software. They are named with
