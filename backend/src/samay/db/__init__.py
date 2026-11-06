@@ -10,6 +10,7 @@ from .models import Base, BillDocument, CalculationRun
 from .store import (
     COMMANDS,
     ENGINE_VERSION,
+    OUTCOME_TEXT,
     RunNotFoundError,
     RunSummary,
     SavedRun,
@@ -24,6 +25,7 @@ from .store import (
 __all__ = [
     "COMMANDS",
     "ENGINE_VERSION",
+    "OUTCOME_TEXT",
     "Base",
     "BillDocument",
     "CalculationRun",

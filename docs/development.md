@@ -35,11 +35,12 @@ Database (Step 4, needs `.env` and Docker; see [docker-safety.md](docker-safety.
 ```bash
 make db-up            # start samay-db (checks scope, disk, image and ownership first)
 make db-migrate       # apply migrations
-make backend-db-test  # database tests in throwaway samay_test_* databases
+make backend-db-test  # database and API tests in throwaway samay_test_* databases
 make bill-save FILE=examples/bills/differing.json
 make bill-history
 make bill-show RUN=1      # exact saved report (python -m samay.db show 1 --source: the input)
 make bill-verify RUN=1    # recalculate from the saved input and compare
+make api              # local API on 127.0.0.1:8000, see api.md
 make db-down          # stop; data in samay_pgdata is kept
 ```
 
@@ -75,8 +76,8 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 | 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | Done (PR #2) |
 | 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | Done (PR #3) |
 | 3B | `reconcile`, JSON command line, golden bills checked by hand | Done (PR #4) |
-| 4 | Isolated database (`make db-up`), migrations, saved bills and reports | This step |
-| 5 | API | Not started |
+| 4 | Isolated database (`make db-up`), migrations, saved bills and reports | Done (PR #5) |
+| 5 | Minimal local API ([api.md](api.md)) | This step |
 | 6 | Front end | Not started |
 | 7 | End-to-end vertical slice | Not started |
 

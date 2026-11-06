@@ -11,7 +11,7 @@ backend/   FastAPI (Python 3.13, uv)
     |-- billing/   bill input, validation, recalculation and reconciliation (uses core + tariffs)
     |-- io/        strict JSON bill reader and report writer (samay.bill/1, samay.report/1)
     |-- cli.py     python -m samay.cli validate|calculate|reconcile
-    |-- api/       HTTP routes
+    |-- api/       HTTP API over db/ (FastAPI, 127.0.0.1 only; make api; see api.md)
     `-- db/        saved bills and reports: SQLAlchemy models, save/list/show/verify
                    (python -m samay.db); migrations in backend/migrations (Alembic, psycopg)
 PostgreSQL 16 in Docker Compose project "samay" (127.0.0.1:55432)
@@ -57,6 +57,9 @@ Rules the code enforces (and tests prove):
 - `samay.db` (Step 4) saves the exact bill file and the exact report in two
   append-only tables; money is BIGINT paise and MISSING is NULL. The engine never
   imports it. See [decisions/0005-persistence.md](decisions/0005-persistence.md).
+- `samay.api` (Step 5) is a thin FastAPI layer over `samay.db`: no money arithmetic,
+  money as strings of paise, MISSING as null. See
+  [decisions/0006-minimal-api.md](decisions/0006-minimal-api.md) and [api.md](api.md).
 - The schedule optimiser (later milestone) is exhaustive and bounded: at most 8 movable
   batches, 2,000,000 combinations and 10 seconds.
 

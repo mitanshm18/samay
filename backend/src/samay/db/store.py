@@ -86,6 +86,27 @@ class RunSummary:
     explanation: str | None
     created_at: datetime
 
+    @property
+    def outcome(self) -> str:
+        """calculated, clean or not-clean. not-clean is a result, not an error."""
+        if self.command == "calculate":
+            return "calculated"
+        return "clean" if self.exit_code == 0 else "not-clean"
+
+    @property
+    def outcome_text(self) -> str:
+        return OUTCOME_TEXT[self.outcome]
+
+
+OUTCOME_TEXT = {
+    "calculated": "Recalculated only; not compared with a printed bill.",
+    "clean": "Every recalculated line was compared and matches, and the totals agree.",
+    "not-clean": (
+        "At least one line differs or could not be compared, or the totals differ or "
+        "cannot be determined. This is a reconciliation result, not an error: see the report."
+    ),
+}
+
 
 @dataclass(frozen=True, slots=True)
 class StoredRun:

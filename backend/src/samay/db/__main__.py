@@ -100,6 +100,7 @@ def _act(args: argparse.Namespace, engine: Engine, out: TextIO) -> int:
             out.write(banner + "\n")
         note = "new bill file" if saved.document_was_new else "bill file already saved"
         out.write(f"Saved ({note}): {_summary_line(stored.summary)}\n")
+        out.write(f"Result: {stored.summary.outcome}. {stored.summary.outcome_text}\n")
         return saved.exit_code
     if args.action == "list":
         runs = list_runs(engine, args.limit)
