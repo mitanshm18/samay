@@ -1,0 +1,40 @@
+# SAMAY's only Docker resource: one local PostgreSQL database.
+#
+# Isolation rules (checked by scripts/check_docker_scope.py, see docs/docker-safety.md):
+#   - Compose project is always "samay", so commands only touch samay resources.
+#   - Container, volume and network names all start with "samay".
+#   - pull_policy: never  -> Docker never downloads an image for SAMAY.
+#   - Port bound to 127.0.0.1 only.
+#   - No external volumes or networks, no bind mounts, nothing privileged.
+#
+# Nothing here runs until Milestone 1, Step 4 adds the `make db-up` target.
+
+name: samay
+
+services:
+  db:
+    image: ${SAMAY_PG_IMAGE:?Set SAMAY_PG_IMAGE in .env (see .env.example)}
+    pull_policy: never
+    container_name: samay-db
+    environment:
+      POSTGRES_DB: samay
+      POSTGRES_USER: samay
+      POSTGRES_PASSWORD: ${SAMAY_DB_PASSWORD:?Set SAMAY_DB_PASSWORD in .env (see .env.example)}
+    ports:
+      - "127.0.0.1:${SAMAY_DB_PORT:-55432}:5432"
+    volumes:
+      - samay_pgdata:/var/lib/postgresql/data
+    labels:
+      org.samay.project: "samay"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samay -d samay"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+
+volumes:
+  samay_pgdata:
+    name: samay_pgdata
+    labels:
+      org.samay.project: "samay"

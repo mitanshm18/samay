@@ -1,0 +1,51 @@
+# Development guide
+
+## Requirements (already on the development Mac)
+
+git, Python 3.12 or newer (3.13 in use), uv, Node 22 or newer, npm, Docker Desktop
+with Compose, and the PostgreSQL 16 image. `make doctor` checks all of them without
+changing anything.
+
+## Cloning a private repository
+
+The `gh` CLI is not needed. If `git clone https://github.com/mitanshm18/samay.git`
+asks for a password:
+
+1. On GitHub, open Settings, Developer settings, Personal access tokens,
+   Fine-grained tokens, and create a token limited to the `samay` repository with
+   **Contents: Read and write** and **Pull requests: Read**.
+2. Tell git to store it in the macOS Keychain (one-time):
+   ```bash
+   git config --global credential.helper osxkeychain
+   ```
+3. Run the clone again. Username: `mitanshm18`. Password: paste the token.
+
+## Daily commands
+
+```bash
+make doctor        # read-only check
+make check         # script tests + shell checks
+```
+
+## Branches and pull requests
+
+- `main` is always working. All changes go through a pull request with green CI.
+- Each Milestone 1 step is its own branch and pull request.
+- Commit `.env` never. `make doctor` fails if it is tracked.
+
+## Shell compatibility
+
+Scripts must run on the macOS defaults: bash 3.2 and GNU make 3.81.
+No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
+
+## Milestone 1 steps
+
+1. Skeleton, docs, Makefile, CI, read-only doctor (this step)
+2. Backend project with uv
+3. Calculation core with the synthetic tariff, fully tested
+4. Isolated database (`make db-up`) and migrations
+5. API
+6. Front end
+7. End-to-end vertical slice
+
+Each step needs separate approval before it starts.
