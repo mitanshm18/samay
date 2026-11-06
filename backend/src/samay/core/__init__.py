@@ -13,7 +13,7 @@ from .errors import (
     UnitMismatchError,
 )
 from .measurement import IntervalReading, MeterInterval, average_power_factor
-from .money import ExactAmount, Money, Rate
+from .money import ExactAmount, Money, Rate, RateBasis, format_rupees
 from .provenance import DataStatus, Provenance, Traced, combine_status
 from .rounding import QuantityRounding, RoundingRule, round_paise
 from .units import (
@@ -21,6 +21,7 @@ from .units import (
     ApparentPower,
     Duration,
     Energy,
+    ExactApparentPower,
     Power,
     PowerFactor,
     Quantity,
@@ -35,6 +36,7 @@ __all__ = [
     "Duration",
     "Energy",
     "ExactAmount",
+    "ExactApparentPower",
     "IntervalMismatchError",
     "IntervalReading",
     "InvalidValueError",
@@ -49,6 +51,7 @@ __all__ = [
     "Quantity",
     "QuantityRounding",
     "Rate",
+    "RateBasis",
     "ReactiveEnergy",
     "RoundingRule",
     "SamayCoreError",
@@ -57,5 +60,6 @@ __all__ = [
     "UnitMismatchError",
     "average_power_factor",
     "combine_status",
+    "format_rupees",
     "round_paise",
 ]

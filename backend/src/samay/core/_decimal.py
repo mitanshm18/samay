@@ -58,6 +58,11 @@ ROUNDING = Context(
 
 type DecimalInput = Decimal | int | str
 
+# Inputs beyond these limits are refused with PrecisionError before any
+# arithmetic, so absurd values can never surface a raw decimal-module error.
+MAX_INPUT_DIGITS = 40
+MAX_INPUT_EXPONENT = 40
+
 
 def to_decimal(value: object, *, what: str) -> Decimal:
     """Convert a str, int or Decimal to a finite Decimal.
@@ -83,6 +88,17 @@ def to_decimal(value: object, *, what: str) -> Decimal:
         raise TypeError(f"{what}: expected str, int or Decimal, got {type(value).__name__}")
     if not result.is_finite():
         raise InvalidValueError(f"{what}: {value!r} is not a finite number")
+    _sign, digits, exponent = result.as_tuple()
+    assert isinstance(exponent, int)
+    if (
+        len(digits) > MAX_INPUT_DIGITS
+        or exponent < -MAX_INPUT_EXPONENT
+        or result.adjusted() > MAX_INPUT_EXPONENT
+    ):
+        raise PrecisionError(
+            f"{what}: {value!r} has too many digits "
+            f"(at most {MAX_INPUT_DIGITS} significant digits, magnitude 1E+-{MAX_INPUT_EXPONENT})"
+        )
     return result
 
 
@@ -111,5 +127,6 @@ def check_places(value: Decimal, max_places: int, *, what: str, hint: str = "") 
 
 def check_magnitude(value: Decimal, limit: Decimal, *, what: str) -> None:
     """Raise InvalidValueError if abs(value) >= limit."""
-    if EXACT.abs(value) >= limit:
+    # copy_abs() is context-free and never rounds, whatever the digit count.
+    if value.copy_abs() >= limit:
         raise InvalidValueError(f"{what}: {value} is outside the supported range (< {limit})")

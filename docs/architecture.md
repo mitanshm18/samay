@@ -8,6 +8,7 @@ frontend/  React + TypeScript + Vite (npm), Tailwind, Radix, TanStack Query, Zod
 backend/   FastAPI (Python 3.13, uv)
     |-- core/      pure calculation code: no I/O, no database, fully unit-tested
     |-- tariffs/   tariff definitions, each marked synthetic or verified
+    |-- billing/   bill input, validation and recalculation (uses core + tariffs)
     |-- api/       HTTP routes
     `-- db/        SQLAlchemy models + Alembic migrations (psycopg)
 PostgreSQL 16 in Docker Compose project "samay" (127.0.0.1:55432)
@@ -19,9 +20,9 @@ Pure Python, standard library only: no I/O, database, network or clock access.
 
 | Module | Holds |
 | --- | --- |
-| `money.py` | `Money` (int paise), `ExactAmount` (exact fractional paise), `Rate` (exact paise per unit) |
+| `money.py` | `Money` (int paise), `ExactAmount` (exact fractional paise), `Rate` (exact paise per unit, with a `RateBasis`) |
 | `rounding.py` | `RoundingRule`, `round_paise`: the only place money is rounded |
-| `units.py` | `Energy` kWh, `ApparentEnergy` kVAh, `ReactiveEnergy` kVArh, `Power` kW, `ApparentPower` kVA, `Duration` h, `PowerFactor` |
+| `units.py` | `Energy` kWh, `ApparentEnergy` kVAh, `ReactiveEnergy` kVArh, `Power` kW, `ApparentPower` kVA, `Duration` h, `PowerFactor`, `ExactApparentPower` (exact kVA, e.g. a 75% demand floor) |
 | `measurement.py` | `MeterInterval`, `IntervalReading`, `average_power_factor` |
 | `provenance.py` | `Provenance`, `DataStatus`, `Traced` |
 
@@ -42,13 +43,17 @@ Rules the code enforces (and tests prove):
 - Every value can carry provenance (`entered`, `extracted`, `calculated`, `estimated`,
   `missing`) and a separate data status (`synthetic` or `verified`). Synthetic status
   always spreads to derived values; missing inputs make results missing.
-- Planned for Step 3: `recompute_bill(inputs, tariff)` and `reconcile(printed, recomputed)`.
+- `recompute_bill(bill, tariff)` (Step 3A, `samay/billing`) validates the input, then
+  computes every line exactly and rounds each once; total = sum of lines, always.
+  See [decisions/0003-tariff-and-bill-model.md](decisions/0003-tariff-and-bill-model.md).
+- Planned for Step 3B: `reconcile(printed, recomputed)`.
 - The schedule optimiser (later milestone) is exhaustive and bounded: at most 8 movable
   batches, 2,000,000 combinations and 10 seconds.
 
 ## Tariffs
 
-- `SAMAY-DEMO-1 (SYNTHETIC — not UP rates)` is used in Milestone 1.
+- `SAMAY-DEMO-1 (SYNTHETIC — not UP rates)` is used in Milestone 1. Its rules are in
+  [tariffs/SAMAY-DEMO-1.md](tariffs/SAMAY-DEMO-1.md).
 - A verified UP HV-2 tariff is added only after the 24-row checklist is complete,
   with a page and clause reference, interpretation, unit and an independently checked
   example for every rule. See [data-policy.md](data-policy.md).

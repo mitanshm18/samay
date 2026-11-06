@@ -233,6 +233,20 @@ class ApparentPower(Quantity):
     __slots__ = ()
     UNIT = Unit.KVA
 
+    def percent(self, percent: DecimalInput) -> ExactApparentPower:
+        """percent % of this demand, exactly (e.g. a 75% contract-demand floor).
+
+        The result can have more decimal places than meter resolution
+        (100.123 kVA x 75% = 75.09225 kVA), so it is an ExactApparentPower,
+        never rounded. percent may have at most 2 decimal places.
+        """
+        number = to_decimal(percent, what="ApparentPower.percent")
+        check_places(number, 2, what="ApparentPower.percent")
+        if number < 0 or number > 1000:
+            raise InvalidValueError(f"ApparentPower.percent: {number} is outside 0 to 1000")
+        exact = EXACT.divide(EXACT.multiply(self.value, number), Decimal(100))
+        return ExactApparentPower(exact)
+
     def __mul__(self, other: Duration) -> ApparentEnergy:
         if not isinstance(other, Duration):
             return NotImplemented
@@ -245,6 +259,80 @@ class ApparentPower(Quantity):
         if not isinstance(duration, Duration):
             raise UnitMismatchError("energy_over() needs a Duration")
         return _product(ApparentEnergy, self.value, duration.value, rounding)
+
+
+class ExactApparentPower:
+    """Apparent power in kVA held exactly, beyond meter resolution.
+
+    Produced only by exact operations such as ApparentPower.percent(), so a
+    contract-demand floor like 75.09225 kVA is kept in full instead of being
+    rounded to 3 places. It compares with ApparentPower and ExactApparentPower
+    and can be multiplied by a per-kVA Rate; it is never rounded.
+    """
+
+    __slots__ = ("_value",)
+    MAX_PLACES: ClassVar[int] = 9
+    UNIT: ClassVar[Unit] = Unit.KVA
+
+    def __init__(self, value: Decimal) -> None:
+        if not isinstance(value, Decimal) or not value.is_finite():
+            raise TypeError(
+                "ExactApparentPower holds a finite Decimal; use ApparentPower.percent()"
+            )
+        check_places(value, self.MAX_PLACES, what="ExactApparentPower")
+        check_magnitude(value, _MAGNITUDE_LIMIT, what="ExactApparentPower")
+        if value < 0:
+            raise InvalidValueError(f"ExactApparentPower: {value} is negative")
+        self._value = EXACT.add(value, Decimal(0))
+
+    @classmethod
+    def from_measured(cls, demand: ApparentPower) -> ExactApparentPower:
+        if not isinstance(demand, ApparentPower):
+            raise UnitMismatchError("ExactApparentPower.from_measured() needs an ApparentPower")
+        return cls(demand.value)
+
+    @property
+    def value(self) -> Decimal:
+        return self._value
+
+    def _other(self, other: object) -> Decimal | None:
+        if isinstance(other, ExactApparentPower | ApparentPower):
+            return other.value
+        if isinstance(other, Quantity):
+            raise UnitMismatchError(
+                f"cannot compare kVA with {type(other).__name__} ({other.UNIT.value})"
+            )
+        return None
+
+    def __lt__(self, other: ExactApparentPower | ApparentPower) -> bool:
+        value = self._other(other)
+        return NotImplemented if value is None else self._value < value
+
+    def __le__(self, other: ExactApparentPower | ApparentPower) -> bool:
+        value = self._other(other)
+        return NotImplemented if value is None else self._value <= value
+
+    def __gt__(self, other: ExactApparentPower | ApparentPower) -> bool:
+        value = self._other(other)
+        return NotImplemented if value is None else self._value > value
+
+    def __ge__(self, other: ExactApparentPower | ApparentPower) -> bool:
+        value = self._other(other)
+        return NotImplemented if value is None else self._value >= value
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, ExactApparentPower):
+            return self._value == other._value
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((ExactApparentPower, self._value))
+
+    def __repr__(self) -> str:
+        return f"ExactApparentPower('{self._value}')"
+
+    def __str__(self) -> str:
+        return f"{self._value} kVA"
 
 
 class PowerFactor:

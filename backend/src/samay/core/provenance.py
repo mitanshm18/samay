@@ -22,7 +22,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, overload
 
 from .errors import MissingValueError, ProvenanceError
 
@@ -110,9 +110,21 @@ class Traced[T]:
         """An explicit assumption; basis explains it and is required."""
         return cls(value, Provenance.ESTIMATED, status, basis)
 
+    @overload
     @staticmethod
-    def missing(*, reason: str, status: DataStatus) -> Traced[Any]:
-        """No value is available; reason says why."""
+    def missing(*, reason: str, status: DataStatus) -> Traced[Any]: ...
+
+    @overload
+    @staticmethod
+    def missing[K](*, reason: str, status: DataStatus, kind: type[K]) -> Traced[K]: ...
+
+    @staticmethod
+    def missing(*, reason: str, status: DataStatus, kind: type[Any] | None = None) -> Traced[Any]:
+        """No value is available; reason says why.
+
+        Pass kind (e.g. kind=Energy) to keep the value type for the type checker;
+        it is not used at runtime.
+        """
         return Traced(None, Provenance.MISSING, status, reason)
 
     # ---- derivation --------------------------------------------------------
@@ -127,15 +139,21 @@ class Traced[T]:
         if not inputs:
             raise ProvenanceError("derive() needs at least one input")
         status = combine_status(i.status for i in inputs)
+        reasons: list[str] = []
         for item in inputs:
             if item.provenance is Provenance.MISSING:
-                return Traced(
-                    None,
-                    Provenance.MISSING,
-                    status,
-                    f"{description}: missing input ({item.note})",
-                    tuple(inputs),
-                )
+                for reason in item.missing_reasons():
+                    if reason not in reasons:
+                        reasons.append(reason)
+        if reasons:
+            label = "input" if len(reasons) == 1 else "inputs"
+            return Traced(
+                None,
+                Provenance.MISSING,
+                status,
+                f"{description}: missing {label} ({'; '.join(reasons)})",
+                tuple(inputs),
+            )
         result = function(*(item.raw for item in inputs))
         return Traced(result, Provenance.CALCULATED, status, description, tuple(inputs))
 
@@ -155,6 +173,27 @@ class Traced[T]:
     @property
     def is_synthetic(self) -> bool:
         return self.status is DataStatus.SYNTHETIC
+
+    @property
+    def rests_on_estimate(self) -> bool:
+        """True if this value is, or was derived from, an ESTIMATED value.
+
+        Like SYNTHETIC status, this spreads to everything derived from an
+        estimate, so a calculated figure built on an assumption says so.
+        """
+        return any(leaf.provenance is Provenance.ESTIMATED for leaf in self.leaves())
+
+    def missing_reasons(self) -> tuple[str, ...]:
+        """The reasons of the original MISSING values behind this one (empty if present)."""
+        if not self.is_missing:
+            return ()
+        if not self.inputs:
+            return (self.note,)
+        reasons: list[str] = []
+        for leaf in self.leaves():
+            if leaf.is_missing and leaf.note not in reasons:
+                reasons.append(leaf.note)
+        return tuple(reasons) or (self.note,)
 
     def leaves(self) -> tuple[Traced[Any], ...]:
         """The original (non-derived) values this one rests on, in first-seen order."""
