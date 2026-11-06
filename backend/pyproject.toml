@@ -1,0 +1,58 @@
+[project]
+name = "samay-backend"
+version = "0.1.0"
+description = "SAMAY backend: deterministic electricity cost calculations"
+readme = "README.md"
+requires-python = ">=3.13"
+# The calculation core uses only the Python standard library.
+dependencies = []
+
+[dependency-groups]
+# Development tools only. They live in backend/.venv, never globally.
+dev = [
+    "pytest>=8.3",
+    "hypothesis>=6.112",
+    "coverage>=7.6",
+    "ruff>=0.7",
+    "mypy>=1.13",
+]
+
+[tool.uv]
+# Not built or published as a package; tests import from src/ directly.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers --strict-config"
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/samay"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = false
+exclude_also = ["if TYPE_CHECKING:", "raise AssertionError", "@overload"]
+
+[tool.mypy]
+strict = true
+python_version = "3.13"
+mypy_path = "src"
+explicit_package_bases = true
+files = ["src", "tests"]
+warn_unreachable = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PT", "C4", "PIE", "RET"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802"]

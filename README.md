@@ -7,7 +7,8 @@ SAMAY reads a factory's electricity bill and production schedule, recomputes the
 from the tariff rules, explains every rupee, and shows which batch timings would cost less.
 Every number on screen comes from a real calculation, with its source and assumptions visible.
 
-> **Status:** Milestone 1, Step 1 (project skeleton). There is no application code yet.
+> **Status:** Milestone 1, Step 2 (core types: money in paise, explicit rounding, electricity
+> units, provenance). No database, API or front end yet.
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
 
 ## What is in the repository now
@@ -18,7 +19,8 @@ Every number on screen comes from a real calculation, with its source and assump
 | `scripts/check_docker_scope.py` | Refuses any Docker setup that could touch non-SAMAY resources |
 | `compose.yaml` | SAMAY's own isolated PostgreSQL (not started until Step 4) |
 | `docs/` | Architecture, Docker safety, data policy, storage, development guide, decisions |
-| `backend/`, `frontend/` | Placeholders; code arrives in Steps 2 and 6 |
+| `backend/src/samay/core/` | Pure calculation core types (standard library only), fully tested |
+| `frontend/` | Placeholder; code arrives in Step 6 |
 
 ## First-time setup on a Mac (read-only)
 
@@ -51,7 +53,8 @@ make help                 # list commands
 make doctor               # read-only machine and project check
 make check-docker-scope   # prove compose.yaml is isolated to SAMAY
 make test-scripts         # run the helper-script tests
-make check                # tests + shell checks (what CI runs without Docker)
+make backend-check        # backend: ruff, mypy --strict, tests with branch coverage
+make check                # everything CI runs without Docker
 ```
 
 ## Principles

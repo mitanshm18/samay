@@ -23,9 +23,20 @@ asks for a password:
 ## Daily commands
 
 ```bash
-make doctor        # read-only check
-make check         # script tests + shell checks
+make doctor          # read-only check
+make backend-check   # ruff, mypy --strict, tests with branch coverage
+make check           # everything above that needs no Docker
 ```
+
+The first `make backend-*` run creates `backend/.venv` (about 80-100 MB of development
+tools: pytest, Hypothesis, coverage, ruff, mypy) from the exact versions in
+`backend/uv.lock`. Nothing is installed globally and no Python is downloaded
+(`UV_PYTHON_DOWNLOADS=never`). To remove it: `rm -rf backend/.venv`.
+
+Known technical debt is tracked in [backlog.md](backlog.md).
+
+Property tests use Hypothesis. `HYPOTHESIS_PROFILE=ci` (used in CI) is derandomised so runs
+repeat exactly; `HYPOTHESIS_PROFILE=thorough` runs 5,000 examples per property.
 
 ## Branches and pull requests
 
@@ -40,12 +51,18 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 
 ## Milestone 1 steps
 
-1. Skeleton, docs, Makefile, CI, read-only doctor (this step)
-2. Backend project with uv
-3. Calculation core with the synthetic tariff, fully tested
-4. Isolated database (`make db-up`) and migrations
-5. API
-6. Front end
-7. End-to-end vertical slice
+| Step | Scope | Status |
+| --- | --- | --- |
+| 1 | Skeleton, docs, Makefile, CI, read-only doctor | Done (PR #1) |
+| 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | This step |
+| 3 | Synthetic tariff SAMAY-DEMO-1, `recompute_bill`, `reconcile` | Not started |
+| 4 | Isolated database (`make db-up`) and migrations | Not started |
+| 5 | API | Not started |
+| 6 | Front end | Not started |
+| 7 | End-to-end vertical slice | Not started |
+
+Step 2 was originally "Backend project with uv" and Step 3 "Calculation core".
+They were re-scoped on 6 Nov 2026: Step 2 now includes the core types, and Step 3 is
+the synthetic tariff with bill recomputation and reconciliation.
 
 Each step needs separate approval before it starts.

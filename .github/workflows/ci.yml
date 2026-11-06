@@ -28,3 +28,29 @@ jobs:
 
       - name: Doctor (CI mode, read-only)
         run: bash scripts/doctor.sh --ci
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HYPOTHESIS_PROFILE: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Lint (ruff)
+        run: make backend-lint
+
+      - name: Type check (mypy --strict)
+        run: make backend-typecheck
+
+      - name: Tests with branch coverage (at least 95%)
+        run: make backend-test

@@ -13,16 +13,38 @@ backend/   FastAPI (Python 3.13, uv)
 PostgreSQL 16 in Docker Compose project "samay" (127.0.0.1:55432)
 ```
 
-## The calculation core
+## The calculation core (`backend/src/samay/core`)
 
-- Money is stored as integer **paise**. Floats never hold money.
-- Quantities carry units (kWh, kVAh, kVA, kW, hours) that cannot be mixed by accident.
-- Every value carries a provenance tag: `extracted`, `entered`, `calculated`,
-  `estimated` or `missing`.
-- `recompute_bill(inputs, tariff)` rebuilds a bill line by line from tariff rules.
-- `reconcile(printed_bill, recomputed)` explains each difference.
-- The schedule optimiser is exhaustive and bounded: at most 8 movable batches,
-  2,000,000 combinations and 10 seconds. It refuses larger problems rather than guessing.
+Pure Python, standard library only: no I/O, database, network or clock access.
+
+| Module | Holds |
+| --- | --- |
+| `money.py` | `Money` (int paise), `ExactAmount` (exact fractional paise), `Rate` (exact paise per unit) |
+| `rounding.py` | `RoundingRule`, `round_paise`: the only place money is rounded |
+| `units.py` | `Energy` kWh, `ApparentEnergy` kVAh, `ReactiveEnergy` kVArh, `Power` kW, `ApparentPower` kVA, `Duration` h, `PowerFactor` |
+| `measurement.py` | `MeterInterval`, `IntervalReading`, `average_power_factor` |
+| `provenance.py` | `Provenance`, `DataStatus`, `Traced` |
+
+Rules the code enforces (and tests prove):
+
+- Money is integer **paise**. Binary floats are refused everywhere.
+- Decimal arithmetic never uses Python's shared decimal context, so other code changing
+  `decimal.getcontext()` cannot alter any result (decision 0002, rule 10).
+- `Rate x quantity` gives an `ExactAmount`; it becomes `Money` only via `.round(rule)`
+  with an explicit `RoundingRule`. There is no default and no implicit rounding.
+  See [decisions/0002-money-and-rounding.md](decisions/0002-money-and-rounding.md).
+- Quantity types cannot be mixed (runtime `UnitMismatchError`, and mypy flags it too),
+  are never negative, and hold at most 3 decimal places: excess precision is refused,
+  never rounded silently.
+- A power factor comes only from `average_power_factor()`, given kWh and kVAh readings
+  for the same meter and the same interval, with consistent data (kVAh > 0, kWh <= kVAh).
+  It is an exact fraction until rounded explicitly.
+- Every value can carry provenance (`entered`, `extracted`, `calculated`, `estimated`,
+  `missing`) and a separate data status (`synthetic` or `verified`). Synthetic status
+  always spreads to derived values; missing inputs make results missing.
+- Planned for Step 3: `recompute_bill(inputs, tariff)` and `reconcile(printed, recomputed)`.
+- The schedule optimiser (later milestone) is exhaustive and bounded: at most 8 movable
+  batches, 2,000,000 combinations and 10 seconds.
 
 ## Tariffs
 

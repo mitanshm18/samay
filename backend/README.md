@@ -1,5 +1,12 @@
 # Backend
 
-Empty in Step 1. Step 2 creates a FastAPI project here with uv, using the Python
-already on the Mac (`UV_PYTHON_DOWNLOADS=never`). Step 3 adds the pure calculation
-core. See [../docs/architecture.md](../docs/architecture.md).
+Python 3.13 project managed with uv. In Step 2 it contains only the pure calculation
+core types in `src/samay/core` (standard library only, no runtime dependencies).
+The API and database arrive in later steps. See
+[../docs/architecture.md](../docs/architecture.md).
+
+```bash
+make backend-check        # from the repository root: ruff, mypy --strict, tests + coverage
+```
+
+Development tools live only in `backend/.venv`, created from `uv.lock` on first run.
