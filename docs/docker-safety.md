@@ -34,7 +34,34 @@ make check-docker-scope
 `volume inspect`, `ps`, `compose config`). It also checks that no container or volume
 named `samay-db`/`samay_pgdata` exists that SAMAY did not create.
 
-## Starting the database
+## Starting and stopping the database (Step 4)
 
-Not in Step 1. Step 4 adds `make db-up` / `make db-down`, which will run the scope
-check first and refuse to continue if it fails.
+```bash
+make db-up       # start samay-db and wait until it is healthy
+make db-migrate  # create or update SAMAY's tables
+make db-status   # read-only
+make db-down     # stop samay-db; the saved data in samay_pgdata is kept
+```
+
+`make db-up` runs `scripts/db.sh up`, which refuses to start unless, in order:
+
+1. `.env` exists (copy `.env.example`, set `SAMAY_PG_IMAGE` and `SAMAY_DB_PASSWORD`);
+2. the scope check above passes;
+3. at least 20 GB is free (the storage guardrail);
+4. the image named in `SAMAY_PG_IMAGE` is already on the machine (nothing is pulled);
+5. any existing `samay-db`, `samay_pgdata` or `samay_default` belongs to SAMAY.
+
+Only then does it run `docker compose up --detach --wait db` with this folder's
+`compose.yaml`, which creates exactly `samay-db`, `samay_pgdata` and `samay_default`.
+`make db-down` runs `docker compose down` **without** `-v`: the container and the
+network go, the data volume stays. `scripts/tests/test_db_script.py` fails if the
+script ever gains `prune`, `down -v`, `docker rm`/`rmi`/`pull`/`stop`, or a Compose
+call that is not tied to this folder's `compose.yaml`.
+
+Deleting SAMAY's saved data is deliberately not a Make target. If it is ever
+needed, it is one explicit, named command: `docker volume rm samay_pgdata`
+(after `make db-down`).
+
+Database tests (`make backend-db-test`) create and drop their own
+`samay_test_<random>` databases inside `samay-db`; the `samay` database is never
+used by tests.

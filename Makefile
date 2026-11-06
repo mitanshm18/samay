@@ -10,11 +10,17 @@ ENV_FILE := $(if $(wildcard .env),.env,.env.example)
 # Use the Python already installed; refuse to download one. --locked keeps
 # the exact versions in backend/uv.lock.
 UV_RUN := cd backend && UV_PYTHON_DOWNLOADS=never uv run --locked
+# Database commands (Step 4) read SAMAY_DB_PASSWORD / SAMAY_DB_PORT from .env if it
+# exists; SAMAY_DATABASE_URL (used in CI) wins over them. Local database only.
+DB_ENV := $(if $(wildcard .env),set -a && . ./.env && set +a &&,)
+# Database code is covered by backend-db-test (needs the database), not backend-test.
+DB_CODE := src/samay/db/*
 
 .DEFAULT_GOAL := help
 .PHONY: help doctor doctor-ci check-docker-scope test-scripts lint-scripts check \
 	backend-check-uv backend-test backend-golden backend-lint backend-typecheck backend-check \
-	bill-check-file bill-validate bill-calculate bill-reconcile
+	bill-check-file bill-validate bill-calculate bill-reconcile \
+	db-up db-down db-status db-migrate backend-db-test bill-save bill-history bill-show bill-verify
 
 help: ## Show available commands
 	@echo "SAMAY commands (doctor and check-docker-scope are read-only)"
@@ -44,15 +50,15 @@ backend-check-uv:
 	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed; see docs/development.md"; exit 1; }
 
 backend-test: backend-check-uv ## Run backend tests with branch coverage (fails below 95%)
-	@$(UV_RUN) coverage run -m pytest --ignore=tests/golden
-	@$(UV_RUN) coverage report
+	@$(UV_RUN) coverage run --omit='$(DB_CODE)' -m pytest --ignore=tests/golden --ignore=tests/db
+	@$(UV_RUN) coverage report --omit='$(DB_CODE)'
 
 backend-golden: backend-check-uv ## Golden-bill merge gate (fails until all three bills are hand-checked)
 	@$(UV_RUN) pytest tests/golden
 
 backend-lint: backend-check-uv ## Check backend style with ruff
-	@$(UV_RUN) ruff check src tests
-	@$(UV_RUN) ruff format --check src tests
+	@$(UV_RUN) ruff check src tests migrations
+	@$(UV_RUN) ruff format --check src tests migrations
 
 backend-typecheck: backend-check-uv ## Type-check the backend with mypy --strict
 	@$(UV_RUN) mypy
@@ -76,3 +82,37 @@ bill-calculate: bill-check-file ## Recalculate a bill (FILE=..., optional FORMAT
 
 bill-reconcile: bill-check-file ## Compare a printed bill with SAMAY (FILE=..., optional FORMAT=json)
 	@$(BILL_CLI) reconcile "$(abspath $(FILE))" --format $(or $(FORMAT),text)
+
+# Database (Step 4). Only SAMAY's own container samay-db; see docs/docker-safety.md.
+db-up: ## Start SAMAY's own database (scope, disk and image checks first; never pulls)
+	@bash scripts/db.sh up
+
+db-down: ## Stop SAMAY's database; the saved data in samay_pgdata is kept
+	@bash scripts/db.sh down
+
+db-status: ## Show SAMAY's database container (read-only)
+	@bash scripts/db.sh status
+
+db-migrate: backend-check-uv ## Apply database migrations (alembic upgrade head)
+	@$(DB_ENV) $(UV_RUN) alembic upgrade head
+
+backend-db-test: backend-check-uv ## Database tests in throwaway samay_test_* databases (needs db-up)
+	@$(DB_ENV) $(UV_RUN) coverage run --data-file=.coverage.db -m pytest tests/db
+	@$(UV_RUN) coverage report --data-file=.coverage.db --include='$(DB_CODE)' --fail-under=95
+
+DB_CLI = $(DB_ENV) $(UV_RUN) env PYTHONPATH=src python -m samay.db
+
+bill-save: bill-check-file ## Reconcile a bill and save input + report (FILE=...)
+	@$(DB_CLI) save "$(abspath $(FILE))"
+
+bill-history: backend-check-uv ## List saved bills, newest first
+	@$(DB_CLI) list
+
+bill-run-check: backend-check-uv
+	@test -n "$(RUN)" || { echo "Give a saved run id: make $(MAKECMDGOALS) RUN=1"; exit 2; }
+
+bill-show: bill-run-check ## Print a saved report exactly as produced (RUN=...)
+	@$(DB_CLI) show "$(RUN)"
+
+bill-verify: bill-run-check ## Recalculate a saved bill and compare with its saved report (RUN=...)
+	@$(DB_CLI) verify "$(RUN)"

@@ -7,8 +7,9 @@ SAMAY reads a factory's electricity bill and production schedule, recomputes the
 from the tariff rules, explains every rupee, and shows which batch timings would cost less.
 Every number on screen comes from a real calculation, with its source and assumptions visible.
 
-> **Status:** Milestone 1, Step 2 (core types: money in paise, explicit rounding, electricity
-> units, provenance). No database, API or front end yet.
+> **Status:** Milestone 1, Step 4 (saved bills and reports in SAMAY's own PostgreSQL).
+> Bills can be recalculated, reconciled with the printed bill, saved and shown again
+> from the command line. No API or front end yet.
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
 
 ## What is in the repository now
@@ -17,9 +18,11 @@ Every number on screen comes from a real calculation, with its source and assump
 | --- | --- |
 | `scripts/doctor.sh` | Read-only health check of your Mac and this project |
 | `scripts/check_docker_scope.py` | Refuses any Docker setup that could touch non-SAMAY resources |
-| `compose.yaml` | SAMAY's own isolated PostgreSQL (not started until Step 4) |
+| `compose.yaml`, `scripts/db.sh` | SAMAY's own isolated PostgreSQL (`make db-up` / `make db-down`) |
 | `docs/` | Architecture, Docker safety, data policy, storage, development guide, decisions |
 | `backend/src/samay/core/` | Pure calculation core types (standard library only), fully tested |
+| `backend/src/samay/tariffs/`, `billing/`, `io/`, `cli.py` | Tariff model, bill recalculation, reconciliation, JSON formats, `python -m samay.cli` |
+| `backend/src/samay/db/`, `backend/migrations/` | Saved bills and reports in SAMAY's database, `python -m samay.db` |
 | `frontend/` | Placeholder; code arrives in Step 6 |
 
 ## First-time setup on a Mac (read-only)
@@ -55,6 +58,12 @@ make check-docker-scope   # prove compose.yaml is isolated to SAMAY
 make test-scripts         # run the helper-script tests
 make backend-check        # backend: ruff, mypy --strict, tests with branch coverage
 make check                # everything CI runs without Docker
+make db-up                # start SAMAY's own database (see docs/docker-safety.md)
+make db-migrate           # create or update its tables
+make bill-save FILE=examples/bills/differing.json   # reconcile and save
+make bill-history         # saved bills, newest first
+make bill-show RUN=1      # a saved report exactly as produced
+make db-down              # stop the database; saved data is kept
 ```
 
 ## Principles
