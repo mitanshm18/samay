@@ -1,51 +1,55 @@
 {
   "bill_id": "GB1",
-  "checked_by": null,
-  "checked_on": null,
+  "checked_by": "Mitansh Mathur",
+  "checked_on": "2026-11-06",
   "calculation": {
-    "billing_demand_kva": null,
+    "billing_demand_kva": "187.500",
     "lines_paise": {
-      "demand_charge": null,
-      "excess_demand_charge": null,
-      "energy_charge": null,
-      "tod_adjustment": null,
-      "electricity_duty": null,
-      "rounding_off": null
+      "demand_charge": "7500000",
+      "excess_demand_charge": "0",
+      "energy_charge": "43650450",
+      "tod_adjustment": "0",
+      "electricity_duty": "2557523",
+      "rounding_off": "27"
     },
-    "other_lines_paise": null,
-    "subtotal_paise": null,
-    "total_paise": null
+    "other_lines_paise": "0",
+    "subtotal_paise": "53707973",
+    "total_paise": "53708000"
   },
   "reconciliation": {
     "lines": {
       "demand_charge": {
-        "status": null,
-        "difference_paise": null
+        "status": "MATCH",
+        "difference_paise": "0"
       },
       "excess_demand_charge": {
-        "status": null,
-        "difference_paise": null
+        "status": "CALCULATED_ONLY",
+        "difference_paise": "NOT DETERMINABLE",
+        "checker_note": "absent from the printed bill even though the calculated amount is zero"
       },
       "energy_charge": {
-        "status": null,
-        "difference_paise": null
+        "status": "MATCH",
+        "difference_paise": "0"
       },
       "tod_adjustment": {
-        "status": null,
-        "difference_paise": null
+        "status": "MATCH",
+        "difference_paise": "0"
       },
       "electricity_duty": {
-        "status": null,
-        "difference_paise": null
+        "status": "MATCH",
+        "difference_paise": "0"
       },
       "rounding_off": {
-        "status": null,
-        "difference_paise": null
+        "status": "MATCH",
+        "difference_paise": "0"
       }
     },
-    "total_difference_paise": null,
-    "printed_lines_residual_paise": null,
-    "explanation": null,
-    "exit_code": null
+    "printed_total_paise": "53708000",
+    "calculated_total_paise": "53708000",
+    "total_difference_paise": "0",
+    "printed_lines_sum_paise": "53708000",
+    "printed_lines_residual_paise": "0",
+    "explanation": "PARTIAL",
+    "exit_code": "1"
   }
 }

@@ -199,15 +199,16 @@ class ReconciliationReport:
 def _compare(code: ComponentCode, printed: PrintedLine | None, line: MoneyLine) -> LineComparison:
     calculated = line.amount
     if printed is None:
+        # D1: a line absent from the printed bill is CALCULATED_ONLY whether or
+        # not SAMAY could calculate it; the reason records which.
+        status = LineStatus.CALCULATED_ONLY
         if calculated.is_missing:
-            status = LineStatus.CANNOT_COMPARE
             difference = _undetermined(
                 "line not on printed bill and calculated amount missing "
                 f"({'; '.join(calculated.missing_reasons())})",
                 calculated,
             )
         else:
-            status = LineStatus.CALCULATED_ONLY
             difference = _undetermined("line not on printed bill", calculated)
     else:
         difference = Traced.derive(

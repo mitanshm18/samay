@@ -194,12 +194,87 @@ def test_missing_calculated_lines_cannot_be_compared() -> None:
 def test_absent_line_with_missing_calculation() -> None:
     lines = tuple(p for p in all_printed() if p.code is not C.TOD_ADJUSTMENT)
     report = run(bill(zones=None, printed=lines))
-    assert status_of(report, C.TOD_ADJUSTMENT) is LineStatus.CANNOT_COMPARE
+    # D1: absent from the printed bill is CALCULATED_ONLY even when SAMAY's amount is MISSING.
+    assert status_of(report, C.TOD_ADJUSTMENT) is LineStatus.CALCULATED_ONLY
+    assert diff_of(report, C.TOD_ADJUSTMENT).is_missing
     note = diff_of(report, C.TOD_ADJUSTMENT).note
     assert "line not on printed bill and calculated amount missing" in note
     assert "ToD zone readings not provided" in note
     assert "no printed total was given" in report.total.difference.note
     assert "calculated total missing" in report.total.difference.note
+
+
+ILLEGIBLE = "ToD line illegible"
+
+
+@pytest.mark.parametrize(
+    ("on_bill", "calculated_known", "expected"),
+    [
+        # D1: whether the line is on the printed bill decides CALCULATED_ONLY,
+        # not whether SAMAY could calculate it.
+        ("absent", True, LineStatus.CALCULATED_ONLY),
+        ("absent", False, LineStatus.CALCULATED_ONLY),
+        # Printed but an amount on either side is MISSING: CANNOT_COMPARE.
+        ("illegible", True, LineStatus.CANNOT_COMPARE),
+        ("illegible", False, LineStatus.CANNOT_COMPARE),
+        ("legible", False, LineStatus.CANNOT_COMPARE),
+        ("legible", True, LineStatus.MATCH),
+    ],
+)
+def test_printed_presence_decides_calculated_only(
+    on_bill: str, calculated_known: bool, expected: LineStatus
+) -> None:
+    lines = [p for p in all_printed() if p.code is not C.TOD_ADJUSTMENT]
+    if on_bill == "legible":
+        lines.append(printed(C.TOD_ADJUSTMENT, EXAMPLE_A[C.TOD_ADJUSTMENT]))
+    elif on_bill == "illegible":
+        missing = Traced.missing(reason=ILLEGIBLE, status=VER, kind=Money)
+        lines.append(PrintedLine(C.TOD_ADJUSTMENT, "ToD", missing))
+    b = bill(printed=tuple(lines)) if calculated_known else bill(zones=None, printed=tuple(lines))
+    report = run(b)
+    assert status_of(report, C.TOD_ADJUSTMENT) is expected
+    difference = diff_of(report, C.TOD_ADJUSTMENT)
+    if expected is LineStatus.MATCH:
+        assert difference.value == Money(0)
+    else:
+        assert difference.is_missing  # never zero, never minus the calculated amount
+        assert difference.raw is None
+    if on_bill == "illegible":
+        assert ILLEGIBLE in difference.missing_reasons()
+
+
+def test_absent_lines_with_missing_amounts_and_an_illegible_line() -> None:
+    """The GB3 shape: ToD printed but illegible, duty and rounding off not printed."""
+    keep = (C.DEMAND_CHARGE, C.EXCESS_DEMAND_CHARGE, C.ENERGY_CHARGE)
+    lines = [p for p in all_printed() if p.code in keep]
+    missing = Traced.missing(reason=ILLEGIBLE, status=VER, kind=Money)
+    lines.append(PrintedLine(C.TOD_ADJUSTMENT, "ToD", missing))
+    report = run(bill(zones=None, printed=tuple(lines), printed_total=entered(Money(45_000_000))))
+    assert status_of(report, C.TOD_ADJUSTMENT) is LineStatus.CANNOT_COMPARE
+    for code in (C.ELECTRICITY_DUTY, C.ROUNDING_OFF):
+        assert status_of(report, code) is LineStatus.CALCULATED_ONLY
+        assert diff_of(report, code).is_missing
+        assert (
+            "line not on printed bill and calculated amount missing" in diff_of(report, code).note
+        )
+    for code in keep:
+        assert status_of(report, code) is LineStatus.MATCH
+    assert report.total.difference.is_missing
+    assert report.total.residual.is_missing
+    assert report.explanation.state is ExplanationState.PARTIAL
+    assert not report.is_clean
+
+
+@given(st.sets(st.sampled_from(list(EXAMPLE_A))))
+def test_absent_lines_are_calculated_only_even_when_missing(absent: set[ComponentCode]) -> None:
+    lines = tuple(p for p in all_printed() if p.code not in absent)
+    report = run(bill(zones=None, printed=lines))
+    for comparison in report.lines:
+        if comparison.code in absent:
+            assert comparison.status is LineStatus.CALCULATED_ONLY
+            assert comparison.difference.is_missing
+        elif comparison.calculated is not None and comparison.calculated.amount.is_missing:
+            assert comparison.status is LineStatus.CANNOT_COMPARE
 
 
 # ---- NOT_RECALCULATED ----------------------------------------------------------------

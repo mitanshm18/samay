@@ -3,9 +3,11 @@
 The expected values in expected/GBn.json come ONLY from the signed hand-check
 worksheets (decision 0004, D8). Nobody may fill them in by running SAMAY.
 
-Until all three files are filled in and signed, test_golden_bills_are_signed_off
-fails on purpose: Step 3B must not merge before the hand-check (decision 0003).
-The comparison tests skip until then, so they never pass against blank values.
+Until all three files are filled in AND signed (checked_by, checked_on),
+test_golden_bills_are_signed_off fails on purpose: Step 3B must not merge before
+the hand-check (decision 0003). The comparison tests skip while any value is
+still blank, so they never pass against blank values; they run once the values
+are transcribed, before the final signature, so the checker can review results.
 
 Each bill is checked twice:
 1. calculation: every line, the other lines, subtotal and total, to the paisa;
@@ -74,6 +76,11 @@ def unsigned(bill_id: str) -> list[str]:
     return blanks(expected(bill_id))
 
 
+def unfilled(bill_id: str) -> list[str]:
+    """Blank values other than the signature itself."""
+    return [p for p in unsigned(bill_id) if p not in ("$.checked_by", "$.checked_on")]
+
+
 # ---- the merge gate -----------------------------------------------------------------
 
 
@@ -108,7 +115,10 @@ def test_expected_files_have_the_agreed_shape(bill_id: str) -> None:
     recon = data["reconciliation"]
     assert set(recon) == {
         "lines",
+        "printed_total_paise",
+        "calculated_total_paise",
         "total_difference_paise",
+        "printed_lines_sum_paise",
         "printed_lines_residual_paise",
         "explanation",
         "exit_code",
@@ -127,9 +137,14 @@ def test_expected_files_have_the_agreed_shape(bill_id: str) -> None:
         assert value is None or value == MISSING or _PAISE.fullmatch(value), value
     statuses = {s.name for s in LineStatus}
     for item in recon["lines"].values():
-        assert set(item) == {"status", "difference_paise"}
+        assert set(item) - {"checker_note"} == {"status", "difference_paise"}
+        assert isinstance(item.get("checker_note", ""), str)
         assert item["status"] is None or item["status"] in statuses, item
         assert _difference_ok(item["difference_paise"]), item
+    for key in ("printed_total_paise", "calculated_total_paise"):
+        value = recon[key]
+        assert value is None or value == MISSING or _PAISE.fullmatch(value), value
+    assert _difference_ok(recon["printed_lines_sum_paise"])
     assert _difference_ok(recon["total_difference_paise"])
     assert _difference_ok(recon["printed_lines_residual_paise"])
     assert recon["explanation"] in (None, "COMPLETE", "PARTIAL", "UNDETERMINABLE")
@@ -156,8 +171,9 @@ def test_golden_inputs_are_valid(bill_id: str) -> None:
 
 
 def signed(bill_id: str) -> dict[str, Any]:
-    if unsigned(bill_id):
-        pytest.skip(f"{bill_id} is not signed off yet; see test_golden_bills_are_signed_off")
+    """The checker's values; skips while any value (other than the signature) is blank."""
+    if unfilled(bill_id):
+        pytest.skip(f"{bill_id} values not transcribed yet; see test_golden_bills_are_signed_off")
     return expected(bill_id)
 
 
@@ -252,7 +268,22 @@ def test_reconciliation_matches_the_hand_check(bill_id: str) -> None:
         }
         for line in report.lines
     }
-    assert got == recon["lines"]
+    want = {
+        code: {"status": item["status"], "difference_paise": item["difference_paise"]}
+        for code, item in recon["lines"].items()
+    }
+    assert got == want
+    assert report.total.printed is not None
+    assert show(report.total.printed) == recon["printed_total_paise"]
+    assert show(report.total.calculated) == recon["calculated_total_paise"]
+    # Sum of the printed lines, from the printed bill itself (not from SAMAY).
+    amounts = [line.amount for line in loaded.bill.printed_lines]
+    printed_sum = (
+        UNDETERMINED
+        if any(a.is_missing for a in amounts)
+        else str(sum(a.value.paise for a in amounts))
+    )
+    assert printed_sum == recon["printed_lines_sum_paise"]
     assert show_difference(report.total.difference) == recon["total_difference_paise"]
     assert show_difference(report.total.residual) == recon["printed_lines_residual_paise"]
     assert report.explanation.state.name == recon["explanation"]

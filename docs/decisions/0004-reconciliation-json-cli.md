@@ -21,8 +21,8 @@ always spreads. Step 3B changes no formula, no tariff and nothing in `core/` or
    | --- | --- | --- |
    | `MATCH` | both amounts known and equal | 0 paise |
    | `DIFFERS` | both known, not equal | the exact difference in paise |
-   | `CALCULATED_ONLY` | SAMAY has the line, the printed bill does not (D1) | not determinable |
-   | `CANNOT_COMPARE` | the printed or the calculated amount is MISSING | not determinable |
+   | `CALCULATED_ONLY` | SAMAY has the line (even with a MISSING amount), the printed bill does not (D1) | not determinable |
+   | `CANNOT_COMPARE` | the line is printed, but the printed or the calculated amount is MISSING | not determinable |
    | `NOT_RECALCULATED` | a printed `other` line, taken as printed and not checked | not determinable |
 
    Tolerance is zero: one paisa is a difference. A line absent from the printed bill is
