@@ -59,3 +59,43 @@ jobs:
       # signed off (decision 0004, D8). Do not skip or disable it.
       - name: Golden-bill merge gate (hand-checked bills)
         run: make backend-golden
+
+  # Step 4: SAMAY's database code against a real PostgreSQL 16. The service
+  # container runs on GitHub's runner only; nothing here touches a developer Mac.
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HYPOTHESIS_PROFILE: ci
+      SAMAY_DATABASE_URL: postgresql+psycopg://samay:ci-only-password@127.0.0.1:55432/samay
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: samay
+          POSTGRES_USER: samay
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U samay -d samay"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Apply migrations (make db-migrate)
+        run: make db-migrate
+
+      - name: Database tests with coverage of samay/db (at least 95%)
+        run: make backend-db-test

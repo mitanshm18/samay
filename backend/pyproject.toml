@@ -5,7 +5,11 @@ description = "SAMAY backend: deterministic electricity cost calculations"
 readme = "README.md"
 requires-python = ">=3.13"
 # The calculation core uses only the Python standard library.
-dependencies = []
+dependencies = [
+    "alembic>=1.13,<2",
+    "psycopg[binary]>=3.2,<4",
+    "sqlalchemy>=2.0,<2.1",
+]
 
 [dependency-groups]
 # Development tools only. They live in backend/.venv, never globally.
@@ -41,16 +45,16 @@ exclude_also = ["if TYPE_CHECKING:", "raise AssertionError", "@overload", "if __
 [tool.mypy]
 strict = true
 python_version = "3.13"
-# tests/billing holds a shared helper module (bills.py) imported by its tests.
-mypy_path = "src:tests/billing"
+# tests/billing and tests/db hold shared helper modules (bills.py, dbhelpers.py).
+mypy_path = "src:tests/billing:tests/db"
 explicit_package_bases = true
-files = ["src", "tests"]
+files = ["src", "tests", "migrations"]
 warn_unreachable = true
 
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-src = ["src", "tests"]
+src = ["src", "tests", "migrations"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N", "PT", "C4", "PIE", "RET"]

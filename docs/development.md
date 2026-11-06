@@ -30,6 +30,22 @@ make check           # everything above that needs no Docker
 make bill-reconcile FILE=examples/bills/differing.json   # see cli.md
 ```
 
+Database (Step 4, needs `.env` and Docker; see [docker-safety.md](docker-safety.md)):
+
+```bash
+make db-up            # start samay-db (checks scope, disk, image and ownership first)
+make db-migrate       # apply migrations
+make backend-db-test  # database tests in throwaway samay_test_* databases
+make bill-save FILE=examples/bills/differing.json
+make bill-history
+make bill-show RUN=1      # exact saved report (python -m samay.db show 1 --source: the input)
+make bill-verify RUN=1    # recalculate from the saved input and compare
+make db-down          # stop; data in samay_pgdata is kept
+```
+
+The first `make backend-*` run after Step 4 also installs SQLAlchemy, Alembic and
+psycopg into `backend/.venv` (about 20 MB).
+
 The first `make backend-*` run creates `backend/.venv` (about 80-100 MB of development
 tools: pytest, Hypothesis, coverage, ruff, mypy) from the exact versions in
 `backend/uv.lock`. Nothing is installed globally and no Python is downloaded
@@ -58,8 +74,8 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 | 1 | Skeleton, docs, Makefile, CI, read-only doctor | Done (PR #1) |
 | 2 | Core types: uv backend project, money in paise, explicit rounding, electricity units, meter intervals, provenance | Done (PR #2) |
 | 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | Done (PR #3) |
-| 3B | `reconcile`, JSON command line, golden bills checked by hand | This step (waiting for the golden-bill hand-check) |
-| 4 | Isolated database (`make db-up`) and migrations | Not started |
+| 3B | `reconcile`, JSON command line, golden bills checked by hand | Done (PR #4) |
+| 4 | Isolated database (`make db-up`), migrations, saved bills and reports | This step |
 | 5 | API | Not started |
 | 6 | Front end | Not started |
 | 7 | End-to-end vertical slice | Not started |
