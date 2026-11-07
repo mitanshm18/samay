@@ -41,6 +41,14 @@ make bill-history
 make bill-show RUN=1      # exact saved report (python -m samay.db show 1 --source: the input)
 make bill-verify RUN=1    # recalculate from the saved input and compare
 make api              # local API on 127.0.0.1:8000, see api.md
+```
+
+Front end (Step 6, needs Node.js 20+ and npm; installs into `frontend/node_modules` only):
+
+```bash
+make web-install      # npm ci from frontend/package-lock.json (about 100 MB)
+make web              # http://127.0.0.1:5173, with make api running in another terminal
+make web-check        # type check, tests and production build (also in CI)
 make db-down          # stop; data in samay_pgdata is kept
 ```
 
@@ -77,7 +85,8 @@ No associative arrays, `mapfile`, `${var,,}` or `.ONESHELL`.
 | 3A | Tariff model, synthetic tariff SAMAY-DEMO-1, bill input, validation, `recompute_bill` | Done (PR #3) |
 | 3B | `reconcile`, JSON command line, golden bills checked by hand | Done (PR #4) |
 | 4 | Isolated database (`make db-up`), migrations, saved bills and reports | Done (PR #5) |
-| 5 | Minimal local API ([api.md](api.md)) | This step |
+| 5 | Minimal local API ([api.md](api.md)) | Done (PR #6) |
+| 6 | Demo front end ([frontend/README.md](../frontend/README.md)) | This step |
 | 6 | Front end | Not started |
 | 7 | End-to-end vertical slice | Not started |
 

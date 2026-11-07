@@ -3,7 +3,7 @@
 SAMAY is a modular monolith: one backend, one front end, one database.
 
 ```
-frontend/  React + TypeScript + Vite (npm), Tailwind, Radix, TanStack Query, Zod
+frontend/  React + TypeScript + Vite (npm), Zod; plain CSS (decision 0007)
     |  HTTP (JSON, validated on both sides)
 backend/   FastAPI (Python 3.13, uv)
     |-- core/      pure calculation code: no I/O, no database, fully unit-tested
@@ -60,6 +60,9 @@ Rules the code enforces (and tests prove):
 - `samay.api` (Step 5) is a thin FastAPI layer over `samay.db`: no money arithmetic,
   money as strings of paise, MISSING as null. See
   [decisions/0006-minimal-api.md](decisions/0006-minimal-api.md) and [api.md](api.md).
+- `frontend/` (Step 6) shows what the API returns. It does no arithmetic on money and
+  formats amounts from the paise strings as text. See
+  [decisions/0007-demo-frontend.md](decisions/0007-demo-frontend.md).
 - The schedule optimiser (later milestone) is exhaustive and bounded: at most 8 movable
   batches, 2,000,000 combinations and 10 seconds.
 
