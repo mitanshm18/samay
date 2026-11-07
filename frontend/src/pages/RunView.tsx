@@ -145,9 +145,16 @@ function LineTable({ rec }: { rec: Reconciliation }) {
 function Explanation({ rec }: { rec: Reconciliation }) {
   const ex = rec.explanation;
   const counts = rec.counts;
+  // Chosen from the API's own difference: no arithmetic here.
+  const heading =
+    rec.total.difference.value === null
+      ? "Why the totals cannot be compared"
+      : rec.total.difference.paise === "0"
+        ? "Why the totals match"
+        : "Why the totals differ";
   return (
     <section className="card">
-      <h2>Why the totals differ</h2>
+      <h2>{heading}</h2>
       <p>
         <Badge tone={ex.state === "COMPLETE" ? "good" : "missing"}>{words(ex.state)} explanation</Badge>{" "}
         {EXPLANATION[ex.state]}

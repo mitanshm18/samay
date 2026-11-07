@@ -1,0 +1,102 @@
+{
+  "format": "samay.bill/1",
+  "bill_id": "GB3",
+  "tariff_id": "SAMAY-DEMO-1",
+  "data_status": "synthetic",
+  "period": {
+    "meter_id": "M-GB3",
+    "start": "2026-08-01T00:00:00+05:30",
+    "end": "2026-09-01T00:00:00+05:30"
+  },
+  "readings": {
+    "contract_demand_kva": {
+      "value": "400.000",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, contract demand"
+    },
+    "recorded_md_kva": {
+      "value": "395.555",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, recorded MD"
+    },
+    "kwh": {
+      "value": "60000.000",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, kWh"
+    },
+    "kvah": {
+      "value": "66666.666",
+      "provenance": "entered",
+      "note": "golden bill 3 worksheet, kVAh"
+    },
+    "tod_kvah": {
+      "peak": {
+        "value": "13333.333",
+        "provenance": "entered",
+        "note": "golden bill 3 worksheet, peak kVAh"
+      },
+      "off_peak": {
+        "provenance": "missing",
+        "note": "golden bill 3 worksheet: off-peak kVAh not printed"
+      },
+      "normal": {
+        "value": "33333.333",
+        "provenance": "entered",
+        "note": "golden bill 3 worksheet, normal kVAh"
+      }
+    }
+  },
+  "printed": {
+    "lines": [
+      {
+        "code": "demand_charge",
+        "label": "demand charge",
+        "amount_rupees": {
+          "value": "158222.00",
+          "provenance": "entered",
+          "note": "golden bill 3 printed variant, demand_charge"
+        }
+      },
+      {
+        "code": "excess_demand_charge",
+        "label": "excess demand charge",
+        "amount_rupees": {
+          "value": "0.00",
+          "provenance": "entered",
+          "note": "golden bill 3 printed variant, excess_demand_charge"
+        }
+      },
+      {
+        "code": "energy_charge",
+        "label": "energy charge",
+        "amount_rupees": {
+          "value": "599999.99",
+          "provenance": "entered",
+          "note": "golden bill 3 printed variant, energy_charge"
+        }
+      },
+      {
+        "code": "tod_adjustment",
+        "label": "ToD adjustment",
+        "amount_rupees": {
+          "provenance": "missing",
+          "note": "golden bill 3 printed variant: ToD figure illegible"
+        }
+      },
+      {
+        "code": "other",
+        "label": "Meter rent",
+        "amount_rupees": {
+          "value": "1250.00",
+          "provenance": "entered",
+          "note": "golden bill 3 printed variant, meter rent"
+        }
+      }
+    ],
+    "total_rupees": {
+      "value": "450000.00",
+      "provenance": "entered",
+      "note": "golden bill 3 printed variant, total"
+    }
+  }
+}

@@ -21,7 +21,7 @@ DB_CODE := src/samay/db/*,src/samay/api/*
 	backend-check-uv backend-test backend-golden backend-lint backend-typecheck backend-check \
 	bill-check-file bill-validate bill-calculate bill-reconcile \
 	db-up db-down db-status db-migrate backend-db-test bill-save bill-history bill-show bill-verify \
-	bill-run-check api web-check-npm web-install web web-check
+	bill-run-check api web-check-npm web-install web web-check demo-check
 
 help: ## Show available commands
 	@echo "SAMAY commands (doctor and check-docker-scope are read-only)"
@@ -143,3 +143,8 @@ web: web-check-npm ## Run the frontend on http://127.0.0.1:$(WEB_PORT) (needs we
 web-check: web-check-npm ## Frontend type check, tests and production build (needs web-install)
 	@test -d frontend/node_modules || { echo "Run make web-install first."; exit 1; }
 	cd frontend && npm run typecheck && npm test && npm run build
+
+# Demo readiness (Step 7). Needs db-up, api and web running. Saves one run per example
+# bill (they become the demo history) and checks every step agrees.
+demo-check: ## Check every example bill through the running app (needs make api and make web)
+	@$(PYTHON) scripts/demo_check.py --api http://127.0.0.1:$(API_PORT) --web http://127.0.0.1:$(WEB_PORT)
