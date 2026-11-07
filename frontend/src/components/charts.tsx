@@ -225,7 +225,7 @@ export function HistoryChart({ runs }: { runs: RunSummary[] }) {
         })}
         {shown && active !== null && (
           <div
-            className={`chart-tip${active > recent.length / 2 ? " left" : ""}`}
+            className={`chart-tip ${active < recent.length / 3 ? "right" : active < (2 * recent.length) / 3 ? "mid" : "left"}`}
             style={{ left: `${((active + 0.5) / recent.length) * 100}%` }}
             role="status"
           >

@@ -2234,7 +2234,8 @@ textarea:focus-visible,
 .chart-tip {
   position: absolute;
   top: 0;
-  transform: translateX(-50%);
+  /* The shift uses "translate", not "transform": the entry animation sets transform and
+     would otherwise cancel it, leaving the tooltip off the edge of the chart. */
   min-width: 200px;
   display: flex;
   flex-direction: column;
@@ -2252,11 +2253,15 @@ textarea:focus-visible,
 }
 
 .chart-tip.left {
-  transform: translateX(-85%);
+  translate: -85% 0;
 }
 
-.chart-tip:not(.left) {
-  transform: translateX(-15%);
+.chart-tip.mid {
+  translate: -50% 0;
+}
+
+.chart-tip.right {
+  translate: -15% 0;
 }
 
 .chart-tip strong {

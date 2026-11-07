@@ -79,16 +79,22 @@ describe("theme", () => {
   });
 
   it("still works when storage is blocked", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("blocked");
+    // Some private windows throw on any use of localStorage.
+    const original = Object.getOwnPropertyDescriptor(window, "localStorage");
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get: () => {
+        throw new Error("blocked");
+      },
     });
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    expect(readPref()).toBe("system");
-    render(<Harness />);
-    act(() => fireEvent.click(screen.getByRole("radio", { name: /Dark/ })));
-    expect(document.documentElement.dataset.theme).toBe("dark");
-    vi.restoreAllMocks();
+    try {
+      expect(readPref()).toBe("system");
+      render(<Harness />);
+      act(() => fireEvent.click(screen.getByRole("radio", { name: /Dark/ })));
+      expect(document.documentElement.dataset.theme).toBe("dark");
+    } finally {
+      if (original) Object.defineProperty(window, "localStorage", original);
+      else delete (window as { localStorage?: Storage }).localStorage;
+    }
   });
 });
