@@ -527,6 +527,7 @@ p {
 }
 
 .hbar-missing .hbar-fill {
+  opacity: 0.85;
   background: repeating-linear-gradient(45deg, rgba(255, 181, 71, 0.55) 0 4px, transparent 4px 8px);
   border: 1px dashed var(--missing);
 }
@@ -2113,6 +2114,13 @@ textarea:focus-visible,
 }
 
 /* ---- responsive -------------------------------------------------------------- */
+@media (max-width: 1280px) {
+  /* Four money tiles side by side clip ₹ amounts below this width. */
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1180px) {
   .viz-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

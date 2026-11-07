@@ -184,7 +184,8 @@ export function PowerFactorDial({ profile }: { profile: Profile }) {
   );
 }
 
-/** Calculated totals of the most recent runs, oldest first. MISSING stays MISSING. */
+/** Calculated totals of the most recent runs, oldest first. A MISSING total is a short
+ * hatched stub (never a tall bar that could be read as a large amount, never zero). */
 export function HistoryChart({ runs }: { runs: RunSummary[] }) {
   const recent = runs.slice(0, 14).reverse();
   const values = recent.map((r) => (r.totals.calculated ? Number(r.totals.calculated.paise) : null));
@@ -202,7 +203,7 @@ export function HistoryChart({ runs }: { runs: RunSummary[] }) {
             style={{ animationDelay: `${i * 40}ms` }}
             title={`#${run.run_id} ${run.bill_id}: ${run.totals.calculated?.inr ?? "MISSING"}`}
           >
-            <span className="hbar-fill" style={{ height: v === null ? "100%" : `${Math.max(4, (v / max) * 100)}%` }} />
+            <span className="hbar-fill" style={{ height: v === null ? "10%" : `${Math.max(4, (v / max) * 100)}%` }} />
             <span className="hbar-label">#{run.run_id}</span>
           </a>
         );
