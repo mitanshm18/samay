@@ -31,6 +31,11 @@ curl -s 127.0.0.1:8000/api/runs/1/source      # the bill file exactly as sent
 
 # 7: recalculate from the saved file and compare with the saved report
 curl -s -X POST 127.0.0.1:8000/api/runs/1/verify
+
+# 8: cost optimisation of a saved run (nothing is saved)
+curl -s 127.0.0.1:8000/api/runs/1/optimisation
+# ...or of a bill without the database
+curl -s -X POST --data-binary @examples/bills/golden-gb2.json 127.0.0.1:8000/api/optimise
 ```
 
 `examples/bills/missing-data.json` shows MISSING values (totals `null`, with reasons in
@@ -60,6 +65,36 @@ A saved run's summary:
   totals differ or cannot be determined) or `calculated`. `not-clean` is a result,
   not an error: the run is saved and the answer is 201.
 - `report` is the full `samay.report/1` document ([json-format.md](json-format.md)).
+
+## Cost optimisation
+
+`GET /api/runs/{id}/optimisation` and `POST /api/optimise` return a
+`samay.optimisation/1` document ([decision 0008](decisions/0008-cost-optimisation.md)):
+
+```json
+{
+  "run_id": 2, "format": "samay.optimisation/1", "bill_id": "GB2",
+  "tariff": {"id": "SAMAY-DEMO-1", "status": "synthetic"}, "synthetic": true,
+  "current_total": {"paise": "88758100", "inr": "₹8,87,581.00"},
+  "profile": {"contract_demand_kva": "300.000", "recorded_md_kva": "337.125",
+              "power_factor": "0.917", "zones": [...], ...},
+  "counts": {"actionable": "2", "indicative": "2", "information": "1", "insufficient-data": "1"},
+  "recommendations": [{
+    "key": "excess-demand", "category": "peak-demand", "kind": "actionable",
+    "title": "Avoid the excess demand penalty", "finding": "...", "action": "...",
+    "confidence": "high", "confidence_reason": "...",
+    "saving": {"status": "illustrative", "note": "...", "scenario": "...",
+               "current_total": {...}, "scenario_total": {...},
+               "amount": {"paise": "3898100", "inr": "₹38,981.00"}},
+    "metrics": [{"label": "...", "value": "..."}],
+    "basis": ["..."], "assumptions": ["..."], "missing_data": []
+  }]
+}
+```
+
+`saving.status` is `illustrative` (synthetic tariff or readings: not a real saving),
+`estimated` (verified tariff and readings), `insufficient-data` (amount `null`) or
+`not-applicable`. Quantities are decimal strings; `null` means MISSING.
 
 Errors: 422 invalid bill (the validation document lists every problem), 404 unknown
 run, 503 database not running or not configured, 500 SAMAY bug (no details). Nothing

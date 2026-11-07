@@ -7,8 +7,8 @@ SAMAY reads a factory's electricity bill and production schedule, recomputes the
 from the tariff rules, explains every rupee, and shows which batch timings would cost less.
 Every number on screen comes from a real calculation, with its source and assumptions visible.
 
-> **Status:** Milestone 1, Step 7 (demo readiness). Bills can be recalculated,
-> reconciled with the printed bill, saved and shown again, from the command line, the
+> **Status:** Milestone 1, Step 7 (demo readiness) plus cost optimisation. Bills can be
+> recalculated, reconciled with the printed bill, analysed for savings, saved and shown again, from the command line, the
 > API ([docs/api.md](docs/api.md)) or a local web page ([frontend/README.md](frontend/README.md)).
 > To run the demo, see [docs/demo.md](docs/demo.md).
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
@@ -25,7 +25,7 @@ Every number on screen comes from a real calculation, with its source and assump
 | `backend/src/samay/tariffs/`, `billing/`, `io/`, `cli.py` | Tariff model, bill recalculation, reconciliation, JSON formats, `python -m samay.cli` |
 | `backend/src/samay/db/`, `backend/migrations/` | Saved bills and reports in SAMAY's database, `python -m samay.db` |
 | `backend/src/samay/api/` | Local HTTP API over the saved bills (`make api`) |
-| `frontend/` | Local web page over the API: bill history, check a bill, line-by-line report (`make web`) |
+| `frontend/` | Local web page over the API: bill history, check a bill, line-by-line report, cost optimisation (`make web`) |
 
 ## First-time setup on a Mac (read-only)
 

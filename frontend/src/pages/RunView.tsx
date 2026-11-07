@@ -19,6 +19,14 @@ import {
   StatusPill,
 } from "../components/values";
 import { dateTime, words } from "../format";
+import { type RunTab, runHash } from "../router";
+import { OptimisationPanel } from "./Optimisation";
+
+const TABS: { id: RunTab; label: string }[] = [
+  { id: "reconciliation", label: "Reconciliation" },
+  { id: "optimisation", label: "Cost optimisation" },
+  { id: "calculation", label: "Calculation" },
+];
 
 type State = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; detail: RunDetail };
 
@@ -313,7 +321,7 @@ function Provenance({ value }: { value: Traced }) {
   return <span className="muted small">{words(value.provenance)}</span>;
 }
 
-export function RunView({ id }: { id: number }) {
+export function RunView({ id, tab = "reconciliation" }: { id: number; tab?: RunTab }) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [verify, setVerify] = useState<Verify | "busy" | { error: string } | null>(null);
 
@@ -335,7 +343,15 @@ export function RunView({ id }: { id: number }) {
     };
   }, [id]);
 
-  if (state.kind === "loading") return <p className="muted">Loading run #{id}…</p>;
+  if (state.kind === "loading") {
+    return (
+      <div className="skeleton-stack" aria-busy="true" aria-label={`Loading run #${id}`}>
+        <div className="skeleton tall" />
+        <div className="skeleton" />
+        <div className="skeleton" />
+      </div>
+    );
+  }
   if (state.kind === "error") {
     return (
       <div className="alert alert-bad" role="alert">
@@ -359,7 +375,7 @@ export function RunView({ id }: { id: number }) {
 
   return (
     <>
-      <div className="page-head">
+      <div className="page-head run-head">
         <div>
           <p className="crumb">
             <a href="#/">Dashboard</a> / Run #{run.run_id}
@@ -448,21 +464,49 @@ export function RunView({ id }: { id: number }) {
         )}
       </section>
 
-      {rec && (
-        <section className="card">
-          <h2>Line by line: printed bill vs SAMAY</h2>
-          <p className="legend small">
-            <Badge tone="missing">MISSING</Badge> a value that is not available (never shown as zero) ·{" "}
-            <Badge tone="estimated">ESTIMATED</Badge> rests on an estimate ·{" "}
-            <Badge tone="passthrough">Taken as printed</Badge> pass-through, not recalculated
-          </p>
-          <LineTable rec={rec} />
-        </section>
-      )}
+      <nav className="tabs" role="tablist" aria-label="Run sections">
+        {TABS.map((t) => (
+          <a
+            key={t.id}
+            href={runHash(run.run_id, t.id)}
+            role="tab"
+            aria-selected={tab === t.id}
+            className={`tab${tab === t.id ? " on" : ""}`}
+          >
+            {t.label}
+            {t.id === "optimisation" && <span className="tab-new">New</span>}
+          </a>
+        ))}
+      </nav>
 
-      {rec && <Explanation rec={rec} />}
+      <div className="tab-panel" key={tab}>
+        {tab === "reconciliation" && (
+          <>
+            {rec && (
+              <section className="card">
+                <h2>Line by line: printed bill vs SAMAY</h2>
+                <p className="legend small">
+                  <Badge tone="missing">MISSING</Badge> a value that is not available (never shown as zero) ·{" "}
+                  <Badge tone="estimated">ESTIMATED</Badge> rests on an estimate ·{" "}
+                  <Badge tone="passthrough">Taken as printed</Badge> pass-through, not recalculated
+                </p>
+                <LineTable rec={rec} />
+              </section>
+            )}
 
-      <Breakdown calc={calc} />
+            {rec && <Explanation rec={rec} />}
+            {!rec && (
+              <div className="alert alert-neutral">
+                This run was calculated only: no printed bill was compared. See the calculation tab
+                for every line.
+              </div>
+            )}
+          </>
+        )}
+        {tab === "optimisation" && <OptimisationPanel runId={run.run_id} />}
+        {tab === "calculation" && <Breakdown calc={calc} />}
+      </div>
+
 
       {report.warnings.length > 0 && (
         <section className="card">

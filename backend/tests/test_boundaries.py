@@ -19,7 +19,7 @@ import pytest
 import samay
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "samay"
-ENGINE = [*(SRC / p for p in ("core", "tariffs", "billing", "io")), SRC / "cli.py"]
+ENGINE = [*(SRC / p for p in ("core", "tariffs", "billing", "io", "optimise")), SRC / "cli.py"]
 FORBIDDEN = (
     "sqlalchemy",
     "psycopg",

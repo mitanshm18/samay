@@ -21,7 +21,9 @@ make web-check                  # type check, tests, production build
 | --- | --- | --- |
 | Bill history | `#/` | `GET /api/runs` |
 | Check a bill | `#/new` | `POST /api/validate`, `POST /api/runs?command=reconcile\|calculate` |
-| Run report | `#/runs/<id>` | `GET /api/runs/<id>`, `POST /api/runs/<id>/verify`, report and bill downloads |
+| Run report: reconciliation | `#/runs/<id>` | `GET /api/runs/<id>`, `POST /api/runs/<id>/verify`, report and bill downloads |
+| Run report: cost optimisation | `#/runs/<id>/optimisation` | `GET /api/runs/<id>/optimisation` |
+| Run report: calculation | `#/runs/<id>/calculation` | the same run document |
 
 ## Demo workflow
 
@@ -33,9 +35,18 @@ make web-check                  # type check, tests, production build
 4. The **run report** opens: total payable, printed total, difference, the line-by-line
    table (Match, Differs, Not on bill, Cannot compare, Taken as printed), why the
    totals differ, and the full calculation breakdown with formulas and assumptions.
-5. **Verify saved report** recalculates from the saved bill and confirms the saved
+5. The **Cost optimisation** tab shows demand, time-of-day energy, power factor and
+   load factor, and recommendations (actionable, indicative, information,
+   insufficient data) with the saving, confidence and how it was worked out. With
+   the synthetic tariff every ₹ figure is labelled illustrative, not a real saving
+   ([decision 0008](../docs/decisions/0008-cost-optimisation.md)).
+6. **Verify saved report** recalculates from the saved bill and confirms the saved
    report is identical.
-6. **Bill history** lists every saved run.
+7. **Bill history** lists every saved run, with a chart of recent totals (a MISSING
+   total is drawn hatched, never as zero).
+
+The charts are hand-written SVG and CSS. They convert API strings with `Number()` only
+to size bars and needles; every number shown is the API's own text.
 
 ## Code
 

@@ -3,7 +3,8 @@
 
 Standard library only. Needs `make api` (and, for the web check, `make web`) running.
 For each bill in examples/bills it does what the web page does: validate, calculate,
-reconcile and save, open the run, fetch the exact report and bill file, and verify.
+reconcile and save, open the run, fetch the exact report and bill file, verify, and
+open the cost optimisation (every saving must be labelled illustrative on a synthetic tariff).
 It checks that the pieces agree, that a MISSING total is never shown as an amount,
 and that the three hand-checked golden bills give the hand-checked totals.
 
@@ -111,6 +112,21 @@ def check_bill(api: Http, path: Path) -> str:
         check(totals["calculated"] is None, "a MISSING total is shown as an amount")
         check(totals["difference"] is None, "a difference from a MISSING total is shown")
     check(run["synthetic"] is True, "synthetic tariff status was lost")
+
+    optimisation = api.json("GET", f"/api/runs/{run_id}/optimisation")
+    check(optimisation["synthetic"] is True, "optimisation: synthetic tariff status was lost")
+    check(
+        summary_paise(optimisation["current_total"], MISSING) == calculated,
+        "optimisation: current total differs from the report",
+    )
+    for item in optimisation["recommendations"]:
+        saving = item["saving"]
+        check(
+            saving["status"] != "estimated",
+            f"optimisation: {item['key']} presents a synthetic-tariff saving as a real estimate",
+        )
+        if calculated == MISSING:
+            check(saving["amount"] is None, f"optimisation: {item['key']} prices a saving from a MISSING total")
 
     if path.stem.startswith("golden-"):
         golden_file = GOLDEN / f"{path.stem.removeprefix('golden-').upper()}.json"

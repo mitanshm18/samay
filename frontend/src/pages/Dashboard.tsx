@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, api, type RunSummary } from "../api";
+import { CountUp, HistoryChart } from "../components/charts";
 import { Badge, OutcomePill } from "../components/values";
 import { dateTime, signedTone } from "../format";
 
@@ -44,46 +45,96 @@ export function Dashboard() {
   const runs = state.kind === "ready" ? state.runs : [];
   const count = (outcome: RunSummary["outcome"]) => runs.filter((r) => r.outcome === outcome).length;
 
+  const ready = state.kind === "ready";
+  const tile = (value: number) => (ready ? <CountUp value={value} /> : "–");
+  const latest = runs[0];
+
   return (
     <>
-      <div className="page-head">
-        <div>
-          <h1>Bill history</h1>
+      <section className="hero">
+        <div className="hero-text">
+          <span className="eyebrow">Industrial electricity bill intelligence</span>
+          <h1>Every line of the bill, recalculated to the paisa.</h1>
           <p className="lead">
-            Every bill SAMAY has recalculated and compared with the utility's printed bill. Open a
-            run to see each line, the totals and why they differ.
+            SAMAY rebuilds each charge from the tariff, compares it with the utility's printed bill,
+            explains every difference and finds where the next bill could cost less. Missing data is
+            shown as missing, never as zero.
           </p>
+          <div className="row">
+            <a className="button primary" href="#/new">
+              Check a bill
+            </a>
+            {latest && (
+              <a className="button ghost" href={`#/runs/${latest.run_id}/optimisation`}>
+                Cost optimisation for run #{latest.run_id}
+              </a>
+            )}
+          </div>
         </div>
-        <a className="button primary" href="#/new">
-          Check a bill
-        </a>
-      </div>
+        <div className="hero-chart">
+          <div className="hero-chart-head">
+            <span>Total payable of recent runs</span>
+            <span className="muted small">click a bar to open it</span>
+          </div>
+          {ready && runs.length > 0 ? (
+            <HistoryChart runs={runs} />
+          ) : (
+            <div className={`history-empty${state.kind === "loading" ? " skeleton" : ""}`}>
+              {ready ? "No runs yet" : state.kind === "error" ? "History unavailable" : ""}
+            </div>
+          )}
+          <div className="hero-legend small">
+            <span>
+              <i className="sw sw-clean" /> clean
+            </span>
+            <span>
+              <i className="sw sw-not-clean" /> needs review
+            </span>
+            <span>
+              <i className="sw sw-calculated" /> calculated only
+            </span>
+            <span>
+              <i className="sw sw-missing" /> total MISSING
+            </span>
+          </div>
+        </div>
+      </section>
 
       <section className="tiles" aria-label="Summary">
         <div className="tile">
           <span className="tile-label">Saved runs</span>
-          <span className="tile-value">{state.kind === "ready" ? runs.length : "–"}</span>
+          <span className="tile-value">{tile(runs.length)}</span>
+          <span className="tile-note">each saved exactly as entered</span>
         </div>
         <div className="tile tile-good">
           <span className="tile-label">Clean</span>
-          <span className="tile-value">{state.kind === "ready" ? count("clean") : "–"}</span>
+          <span className="tile-value">{tile(count("clean"))}</span>
           <span className="tile-note">every line matches</span>
         </div>
         <div className="tile tile-bad">
           <span className="tile-label">Needs review</span>
-          <span className="tile-value">{state.kind === "ready" ? count("not-clean") : "–"}</span>
+          <span className="tile-value">{tile(count("not-clean"))}</span>
           <span className="tile-note">differences or values not compared</span>
         </div>
         <div className="tile">
           <span className="tile-label">Calculated only</span>
-          <span className="tile-value">{state.kind === "ready" ? count("calculated") : "–"}</span>
+          <span className="tile-value">{tile(count("calculated"))}</span>
           <span className="tile-note">no printed bill compared</span>
         </div>
       </section>
 
       <section className="card">
-        <h2>Saved runs</h2>
-        {state.kind === "loading" && <p className="muted">Loading…</p>}
+        <div className="section-head">
+          <h2>Bill history</h2>
+          <span className="muted small">newest first · click a row to open the run</span>
+        </div>
+        {state.kind === "loading" && (
+          <div className="skeleton-stack" aria-busy="true" aria-label="Loading">
+            <div className="skeleton" />
+            <div className="skeleton" />
+            <div className="skeleton" />
+          </div>
+        )}
         {state.kind === "error" && (
           <div className="alert alert-bad" role="alert">
             {state.message}
