@@ -157,6 +157,69 @@ const Validation = z.object({
   errors: z.array(InputError),
 });
 export type Validation = z.infer<typeof Validation>;
+const Metric = z.object({ label: z.string(), value: z.string() });
+export const Recommendation = z.object({
+  key: z.string(),
+  category: z.enum([
+    "peak-demand",
+    "contract-demand",
+    "load-shift",
+    "power-factor",
+    "avoidable-charges",
+    "consumption-pattern",
+  ]),
+  kind: z.enum(["actionable", "indicative", "information", "insufficient-data"]),
+  title: z.string(),
+  finding: z.string(),
+  action: z.string(),
+  confidence: z.enum(["high", "medium", "low"]),
+  confidence_reason: z.string(),
+  saving: z.object({
+    status: z.enum(["estimated", "illustrative", "not-applicable", "insufficient-data"]),
+    note: z.string(),
+    scenario: z.string().nullable(),
+    current_total: Money,
+    scenario_total: Money,
+    amount: Money,
+  }),
+  metrics: z.array(Metric),
+  basis: z.array(z.string()),
+  assumptions: z.array(z.string()),
+  missing_data: z.array(z.string()),
+});
+export type Recommendation = z.infer<typeof Recommendation>;
+const Digits = z.string().regex(/^-?[0-9]+(\.[0-9]+)?$/);
+export const Optimisation = z.object({
+  format: z.literal("samay.optimisation/1"),
+  run_id: z.number().int().optional(),
+  bill_id: z.string(),
+  tariff: z.object({ id: z.string(), status: z.string() }),
+  synthetic: z.boolean(),
+  banner: z.string().nullable(),
+  current_total: Money,
+  profile: z.object({
+    contract_demand_kva: Digits.nullable(),
+    recorded_md_kva: Digits.nullable(),
+    demand_floor_kva: Digits.nullable(),
+    billing_demand_kva: Digits.nullable(),
+    kwh: Digits.nullable(),
+    kvah: Digits.nullable(),
+    power_factor: Digits.nullable(),
+    period_hours: z.string(),
+    load_factor_percent: z.string().nullable(),
+    zones: z.array(
+      z.object({
+        zone: z.enum(["peak", "off_peak", "normal"]),
+        hours: z.string(),
+        kvah: Digits.nullable(),
+        percent: z.string().nullable(),
+      }),
+    ),
+  }),
+  counts: z.record(z.string(), z.string()),
+  recommendations: z.array(Recommendation),
+});
+export type Optimisation = z.infer<typeof Optimisation>;
 const Health = z.object({ status: z.string(), version: z.string(), database: z.string() });
 export type Health = z.infer<typeof Health>;
 const Problem = z.object({ error: z.string(), message: z.string() });
@@ -223,6 +286,7 @@ export const api = {
   runs: (limit = 100) => call(RunList, `/api/runs?limit=${limit}`).then((r) => r.runs),
   run: (id: number) => call(RunDetail, `/api/runs/${id}`),
   verify: (id: number) => call(Verify, `/api/runs/${id}/verify`, { method: "POST" }),
+  optimisation: (id: number) => call(Optimisation, `/api/runs/${id}/optimisation`),
   reportUrl: (id: number) => `/api/runs/${id}/report`,
   sourceUrl: (id: number) => `/api/runs/${id}/source`,
 };

@@ -71,3 +71,12 @@ export function words(code: string): string {
   const text = code.replace(/[_-]+/g, " ").toLowerCase();
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+/** The largest of some integer paise strings, compared exactly with BigInt (no arithmetic). */
+export function largestPaise(values: string[]): string | null {
+  let best: string | null = null;
+  for (const value of values) {
+    if (best === null || BigInt(value) > BigInt(best)) best = value;
+  }
+  return best;
+}

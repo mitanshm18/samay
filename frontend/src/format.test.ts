@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupIndian, inrFromDecimal, inrFromPaise, quantity, signedTone } from "./format";
+import { groupIndian, inrFromDecimal, inrFromPaise, quantity, largestPaise, signedTone } from "./format";
 
 describe("money formatting (text only, no arithmetic)", () => {
   it.each([
@@ -47,5 +47,13 @@ describe("money formatting (text only, no arithmetic)", () => {
     expect(signedTone("0")).toBe("zero");
     expect(signedTone("5")).toBe("positive");
     expect(signedTone("-5")).toBe("negative");
+  });
+});
+
+describe("largest paise", () => {
+  it("compares exactly, beyond floating point", () => {
+    expect(largestPaise([])).toBeNull();
+    expect(largestPaise(["100", "99", "-5"])).toBe("100");
+    expect(largestPaise(["9007199254740993", "9007199254740992"])).toBe("9007199254740993");
   });
 });

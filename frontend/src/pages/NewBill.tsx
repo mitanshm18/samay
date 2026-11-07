@@ -1,4 +1,4 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, type DragEvent, useState } from "react";
 import { ApiError, api, type Validation } from "../api";
 import { go } from "../router";
 import { Badge } from "../components/values";
@@ -93,10 +93,19 @@ export function NewBill() {
     setResult({ kind: "idle" });
   };
 
+  const [dragging, setDragging] = useState(false);
+
   const onFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) load(await file.text(), file.name);
     event.target.value = "";
+  };
+
+  const onDrop = async (event: DragEvent<HTMLElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) load(await file.text(), file.name);
   };
 
   const validate = async () => {
@@ -122,10 +131,14 @@ export function NewBill() {
     }
   };
 
+  const step = !text.trim() ? 1 : result.kind === "valid" ? 3 : 2;
+  const steps = ["Choose a bill", "Validate", "Calculate, reconcile and save"];
+
   return (
     <>
       <div className="page-head">
         <div>
+          <span className="eyebrow">New run</span>
           <h1>Check a bill</h1>
           <p className="lead">
             Upload or paste a bill in SAMAY's <code>samay.bill/1</code> format: the meter readings
@@ -135,16 +148,42 @@ export function NewBill() {
         </div>
       </div>
 
+      <ol className="stepper" aria-label="Steps">
+        {steps.map((label, index) => (
+          <li
+            key={label}
+            className={index + 1 < step ? "done" : index + 1 === step ? "current" : ""}
+            aria-current={index + 1 === step ? "step" : undefined}
+          >
+            <span className="step-dot">{index + 1 < step ? "✓" : index + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+
       <div className="grid-2">
         <section className="card">
-          <h2>1. Bill input</h2>
-          <div className="row">
-            <label className="button">
-              Upload JSON file
-              <input type="file" accept=".json,application/json" onChange={onFile} hidden />
-            </label>
-            {source && <span className="muted">Loaded: {source}</span>}
-          </div>
+          <h2>Bill input</h2>
+          <label
+            className={`dropzone${dragging ? " dragging" : ""}${source ? " loaded" : ""}`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+          >
+            <input type="file" accept=".json,application/json" onChange={onFile} hidden />
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="dropzone-icon">
+              <path d="M12 16V4M7 9l5-5 5 5M4 15v5h16v-5" />
+            </svg>
+            <span className="dropzone-title">
+              {source ? `Loaded: ${source}` : "Drop a bill JSON file here, or click to upload"}
+            </span>
+            <span className="muted small">
+              {source ? "Drop or choose another file to replace it." : "or pick a sample bill, or paste below"}
+            </span>
+          </label>
           <label className="field-label" htmlFor="bill-text">
             Bill (samay.bill/1 JSON)
           </label>
@@ -181,7 +220,12 @@ export function NewBill() {
               Calculate only
             </button>
           </div>
-          {result.kind === "busy" && <p className="muted">{result.what}</p>}
+          {result.kind === "busy" && (
+            <p className="busy" role="status">
+              <span className="spinner" aria-hidden="true" />
+              {result.what}
+            </p>
+          )}
           {result.kind === "valid" && <Warnings validation={result.validation} />}
           {result.kind === "invalid" && <Errors validation={result.validation} />}
           {result.kind === "error" && (
@@ -194,15 +238,17 @@ export function NewBill() {
         <aside className="card">
           <h2>Sample bills</h2>
           <p className="muted small">
-            Synthetic examples for the SAMAY-DEMO-1 tariff. Its rates are made up: these are not real
-            UP bills.
+            <span className="badge badge-synthetic">Demo data</span> Synthetic examples for the
+            SAMAY-DEMO-1 tariff. Its rates are made up: these are not real UP bills or real factory
+            data.
           </p>
           <ul className="examples">
             {EXAMPLES.map((example) => (
-              <li key={example.name}>
+              <li key={example.name} className={source === `${example.name}.json` ? "selected" : ""}>
                 <button type="button" className="link" onClick={() => load(example.text, `${example.name}.json`)}>
                   {example.name}.json
                 </button>
+                {example.name.startsWith("golden-") && <span className="badge badge-good">Hand-checked</span>}
                 <span className="muted small">{example.description}</span>
               </li>
             ))}

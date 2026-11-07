@@ -39,14 +39,16 @@ make demo-check
 
 `make demo-check` sends every bill in `examples/bills` through the running app: validate,
 calculate, reconcile, save, open, download the exact report and bill file, verify. It
-checks that a MISSING total is never shown as an amount, and that the three golden bills
+checks that a MISSING total is never shown as an amount, that every cost optimisation
+saving is labelled illustrative (synthetic tariff), and that the three golden bills
 give the hand-checked totals and line statuses. It prints an `ok` line for the API, the web
 page and each of the seven bills, and ends with `Demo check passed.` It saves one run per
 bill, so after it the bill history has demo data, including GB2 and GB3; saving them again
 live in the demo simply adds new runs. Run it before the audience arrives. Each repeat
 adds seven more runs (saved runs are never edited or deleted).
 
-Open http://127.0.0.1:5173. The top right must say **API and database online**.
+Open http://127.0.0.1:5173. The status at the bottom of the sidebar (top right on a phone)
+must say **API and database online**.
 
 ## Demo script (about 5 minutes)
 
@@ -61,12 +63,21 @@ Open http://127.0.0.1:5173. The top right must say **API and database online**.
    - **Why the totals match**: +₹0.01 on the lines, −₹0.01 in the printed bill's own
      arithmetic. "A matching total does not mean matching lines. SAMAY checks to the paisa."
    - **Calculation breakdown**: every formula, input source and rounding rule.
+   - **Cost optimisation** tab: the pink banner says every ₹ figure is illustrative
+     (synthetic tariff). Largest opportunity: raise power factor 0.917 → 0.99,
+     ₹53,072.00 per bill. Excess demand (337.125 kVA against 300 kVA contract):
+     ₹38,981.00, *Actionable*, high confidence. Open **How this was worked out**: the
+     scenario total, calculation basis, assumptions and confidence. "Each saving is
+     the same calculator run on a what-if bill. Nothing is guessed; scenarios are not
+     added together."
 4. **Verify saved report.** "SAMAY recalculates from the saved bill and confirms the
    saved report is identical, byte for byte."
 5. **Check a bill → `golden-gb3.json` → Calculate, reconcile and save.**
    - Total payable is **MISSING**, with the reason (off-peak kVAh not printed), never ₹0.
    - The ToD line is illegible on the printed bill: *Cannot compare*.
    - **Why the totals cannot be compared**: SAMAY does not guess.
+   - **Cost optimisation**: "Insufficient data" instead of a saving; the time-of-day
+     chart shows off-peak as MISSING.
 6. **Check a bill → paste or upload a broken bill → Validate.** Every problem is listed
    with where it is; nothing is calculated or saved. (For example, delete the
    `"tariff_id"` line from a sample.)

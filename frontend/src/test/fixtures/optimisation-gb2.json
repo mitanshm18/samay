@@ -1,0 +1,283 @@
+{
+  "run_id": 2,
+  "format": "samay.optimisation/1",
+  "bill_id": "GB2",
+  "tariff": {
+    "id": "SAMAY-DEMO-1",
+    "status": "synthetic"
+  },
+  "synthetic": true,
+  "banner": "SAMAY-DEMO-1 is SYNTHETIC: its rates are made up and are not UP tariff rates. This is not a real bill.",
+  "current_total": {
+    "paise": "88758100",
+    "inr": "\u20b98,87,581.00"
+  },
+  "profile": {
+    "contract_demand_kva": "300.000",
+    "recorded_md_kva": "337.125",
+    "demand_floor_kva": "225.000",
+    "billing_demand_kva": "337.125",
+    "kwh": "70010.000",
+    "kvah": "76333.333",
+    "power_factor": "0.917",
+    "period_hours": "744",
+    "load_factor_percent": "30.4%",
+    "zones": [
+      {
+        "zone": "peak",
+        "hours": "18:00-22:00",
+        "kvah": "15266.667",
+        "percent": "20.0%"
+      },
+      {
+        "zone": "off_peak",
+        "hours": "22:00-06:00",
+        "kvah": "22900.000",
+        "percent": "30.0%"
+      },
+      {
+        "zone": "normal",
+        "hours": "06:00-18:00",
+        "kvah": "38166.666",
+        "percent": "50.0%"
+      }
+    ]
+  },
+  "counts": {
+    "actionable": "2",
+    "indicative": "2",
+    "information": "1",
+    "insufficient-data": "1"
+  },
+  "recommendations": [
+    {
+      "key": "excess-demand",
+      "category": "peak-demand",
+      "kind": "actionable",
+      "title": "Avoid the excess demand penalty",
+      "finding": "Maximum demand 337.125 kVA exceeded the contract demand of 300.000 kVA by 37.125 kVA, which triggers the excess demand charge (1.5x the demand rate).",
+      "action": "Stagger the start of large loads (compressors, furnaces, motors) so the 15-minute peak stays below contract demand, or review the contract demand with the utility if this peak is routine.",
+      "confidence": "high",
+      "confidence_reason": "Both values are read from the bill; the excess is measured.",
+      "saving": {
+        "status": "illustrative",
+        "note": "Illustrative only: recalculated with SAMAY-DEMO-1, a SYNTHETIC tariff. This shows how the saving arises; it is not a real-world saving.",
+        "scenario": "maximum demand held at 300.000 kVA",
+        "current_total": {
+          "paise": "88758100",
+          "inr": "\u20b98,87,581.00"
+        },
+        "scenario_total": {
+          "paise": "84860000",
+          "inr": "\u20b98,48,600.00"
+        },
+        "amount": {
+          "paise": "3898100",
+          "inr": "\u20b938,981.00"
+        }
+      },
+      "metrics": [
+        {
+          "label": "Contract demand",
+          "value": "300.000 kVA"
+        },
+        {
+          "label": "Recorded maximum demand",
+          "value": "337.125 kVA"
+        },
+        {
+          "label": "Demand floor (75% of contract)",
+          "value": "225.000 kVA"
+        },
+        {
+          "label": "Utilisation of contract demand",
+          "value": "112.4%"
+        },
+        {
+          "label": "Excess demand",
+          "value": "37.125 kVA"
+        }
+      ],
+      "basis": [
+        "Scenario: the same bill with recorded maximum demand equal to contract demand, recalculated with the same tariff.",
+        "Saving = current total - scenario total (includes demand, excess demand, duty and rounding)."
+      ],
+      "assumptions": [],
+      "missing_data": []
+    },
+    {
+      "key": "power-factor",
+      "category": "power-factor",
+      "kind": "actionable",
+      "title": "Raise power factor to cut billed kVAh",
+      "finding": "Average power factor is 0.917. Energy is billed on kVAh, so every unit of reactive power is paid for: 76333.333 kVAh were billed for 70010.000 kWh of useful energy.",
+      "action": "Install or repair automatic power factor correction (capacitor banks) near inductive loads to bring power factor to 0.99.",
+      "confidence": "medium",
+      "confidence_reason": "Power factor is calculated from the bill; reaching the target needs correctly sized capacitors.",
+      "saving": {
+        "status": "illustrative",
+        "note": "Illustrative only: recalculated with SAMAY-DEMO-1, a SYNTHETIC tariff. This shows how the saving arises; it is not a real-world saving.",
+        "scenario": "power factor 0.99 (70717.172 kVAh)",
+        "current_total": {
+          "paise": "88758100",
+          "inr": "\u20b98,87,581.00"
+        },
+        "scenario_total": {
+          "paise": "83450900",
+          "inr": "\u20b98,34,509.00"
+        },
+        "amount": {
+          "paise": "5307200",
+          "inr": "\u20b953,072.00"
+        }
+      },
+      "metrics": [
+        {
+          "label": "Average power factor",
+          "value": "0.917"
+        },
+        {
+          "label": "Active energy",
+          "value": "70010.000 kWh"
+        },
+        {
+          "label": "Apparent energy (billed)",
+          "value": "76333.333 kVAh"
+        },
+        {
+          "label": "kVAh at power factor 0.99",
+          "value": "70717.172 kVAh"
+        }
+      ],
+      "basis": [
+        "Scenario: the same kWh at power factor 0.99 (kVAh = kWh / 0.99, rounded up to 0.001), each zone scaled in proportion, recalculated with the same tariff."
+      ],
+      "assumptions": [
+        "Power factor 0.99 is a common target for automatic correction; the capacitor cost is not included."
+      ],
+      "missing_data": []
+    },
+    {
+      "key": "load-shift",
+      "category": "load-shift",
+      "kind": "indicative",
+      "title": "Shift flexible load out of peak hours",
+      "finding": "15266.667 kVAh (20.0% of the month) was used in peak hours (18:00-22:00), which cost 250.00 paise/kVAh more than off-peak (22:00-06:00).",
+      "action": "Move batch processes, water pumping, chilling or charging that can run at night into the off-peak window.",
+      "confidence": "medium",
+      "confidence_reason": "Zone readings are from the bill; how much load can move is an assumption.",
+      "saving": {
+        "status": "illustrative",
+        "note": "Illustrative only: recalculated with SAMAY-DEMO-1, a SYNTHETIC tariff. This shows how the saving arises; it is not a real-world saving.",
+        "scenario": "1526.666 kVAh moved from peak to off-peak",
+        "current_total": {
+          "paise": "88758100",
+          "inr": "\u20b98,87,581.00"
+        },
+        "scenario_total": {
+          "paise": "88357400",
+          "inr": "\u20b98,83,574.00"
+        },
+        "amount": {
+          "paise": "400700",
+          "inr": "\u20b94,007.00"
+        }
+      },
+      "metrics": [
+        {
+          "label": "peak (18:00-22:00)",
+          "value": "15266.667 kVAh (20.0%)"
+        },
+        {
+          "label": "off-peak (22:00-06:00)",
+          "value": "22900.000 kVAh (30.0%)"
+        },
+        {
+          "label": "normal (06:00-18:00)",
+          "value": "38166.666 kVAh (50.0%)"
+        },
+        {
+          "label": "Peak minus off-peak rate",
+          "value": "250.00 paise/kVAh"
+        }
+      ],
+      "basis": [
+        "Scenario: 10% of peak energy (1526.666 kVAh) moved to off-peak, total energy unchanged, recalculated with the same tariff."
+      ],
+      "assumptions": [
+        "10% of peak-hour energy is assumed to be flexible. The bill does not show which loads run at peak."
+      ],
+      "missing_data": []
+    },
+    {
+      "key": "load-factor",
+      "category": "consumption-pattern",
+      "kind": "indicative",
+      "title": "Peaky load profile",
+      "finding": "Load factor is 30.4%: average apparent load over the period compared with the maximum demand. A low load factor means short, high peaks relative to the average, which drive the demand charge.",
+      "action": "Spread high loads more evenly across shifts.",
+      "confidence": "medium",
+      "confidence_reason": "Uses monthly totals; interval data would show the peaks.",
+      "saving": {
+        "status": "not-applicable",
+        "note": "Not priced: shown to explain the demand charge.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [
+        "Load factor = kVAh / (maximum demand kVA x hours in the period)."
+      ],
+      "assumptions": [],
+      "missing_data": []
+    },
+    {
+      "key": "other-charges",
+      "category": "avoidable-charges",
+      "kind": "information",
+      "title": "Review charges SAMAY cannot check",
+      "finding": "These lines were taken as printed, not recalculated: Meter rent \u20b91,250.00.",
+      "action": "Check each against the tariff order and your agreement with the utility (for example meter rent for a meter you own).",
+      "confidence": "low",
+      "confidence_reason": "The tariff rules for these lines are not modelled.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data: no tariff rule for these charges.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [],
+      "assumptions": [],
+      "missing_data": []
+    },
+    {
+      "key": "trend",
+      "category": "consumption-pattern",
+      "kind": "insufficient-data",
+      "title": "Unusual consumption: insufficient data",
+      "finding": "Spotting unusual consumption needs earlier bills for the same meter.",
+      "action": "Save at least three months of bills for meter M-GB2 to compare.",
+      "confidence": "low",
+      "confidence_reason": "One bill has no baseline.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [],
+      "assumptions": [],
+      "missing_data": [
+        "earlier bills for the same meter"
+      ]
+    }
+  ]
+}

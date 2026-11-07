@@ -32,6 +32,7 @@ class FakeApi(BaseHTTPRequestHandler):
     total: str | None = "100"
     summary_total: dict[str, str] | None = {"paise": "100", "inr": "₹1.00"}
     verify_matches = True
+    saving_status = "illustrative"
     saved: bytes = b""
 
     def log_message(self, *args: object) -> None:
@@ -68,6 +69,15 @@ class FakeApi(BaseHTTPRequestHandler):
             },
         }
 
+    def optimisation(self) -> dict[str, Any]:
+        cls = type(self)
+        amount = {"paise": "10", "inr": "₹0.10"} if cls.summary_total else None
+        return {
+            "synthetic": True,
+            "current_total": cls.summary_total,
+            "recommendations": [{"key": "k", "saving": {"status": cls.saving_status, "amount": amount}}],
+        }
+
     def do_GET(self) -> None:
         if self.path == "/":
             self.send(200, b"<html><title>SAMAY</title></html>", "text/html")
@@ -77,6 +87,8 @@ class FakeApi(BaseHTTPRequestHandler):
             self.send(200, json.dumps({"run": self.run(), "report": self.report()}).encode())
         elif self.path == "/api/runs/1/report":
             self.send(200, json.dumps(self.report()).encode())
+        elif self.path == "/api/runs/1/optimisation":
+            self.send(200, json.dumps(self.optimisation()).encode())
         elif self.path == "/api/runs/1/source":
             self.send(200, type(self).saved)
         else:
@@ -100,6 +112,7 @@ class DemoCheckTests(unittest.TestCase):
         FakeApi.total = "100"
         FakeApi.summary_total = {"paise": "100", "inr": "₹1.00"}
         FakeApi.verify_matches = True
+        FakeApi.saving_status = "illustrative"
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), FakeApi)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
@@ -143,6 +156,12 @@ class DemoCheckTests(unittest.TestCase):
         code, out = self.run_check()
         self.assertEqual(code, 0, out)
         self.assertIn("total payable MISSING", out)
+
+    def test_fails_when_a_synthetic_saving_is_called_an_estimate(self) -> None:
+        FakeApi.saving_status = "estimated"
+        code, out = self.run_check()
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL bill.json: optimisation: k presents a synthetic-tariff saving", out)
 
     def test_explains_when_the_api_is_not_running(self) -> None:
         out = io.StringIO()

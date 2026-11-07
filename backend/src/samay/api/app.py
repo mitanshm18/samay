@@ -44,6 +44,7 @@ from samay.db.config import DatabaseConfigError, database_url
 from samay.io import json_report
 from samay.io.errors import BillInputError
 from samay.io.json_bill import MAX_BYTES, load_bill
+from samay.optimise import optimisation_document, optimise
 
 DB_DOWN = "Cannot reach SAMAY's database. Start it with: make db-up"
 
@@ -213,6 +214,20 @@ def create_app(engine: Engine | None = None) -> FastAPI:
     def source(run_id: int) -> Response:
         stored = get_run(engines.get(), run_id)
         return Response(stored.source_bytes, media_type="application/json")
+
+    @app.get("/api/runs/{run_id}/optimisation")
+    def run_optimisation(run_id: int) -> dict[str, Any]:
+        """Cost-reduction opportunities for a saved bill, worked out from its exact
+        saved input by samay.optimise. Nothing is saved."""
+        stored = get_run(engines.get(), run_id)
+        loaded = load_bill(stored.source_bytes)
+        return {"run_id": run_id, **optimisation_document(optimise(loaded.bill, loaded.tariff))}
+
+    @app.post("/api/optimise")
+    async def optimise_bill(request: Request) -> dict[str, Any]:
+        """Cost-reduction opportunities for a posted bill. Needs no database."""
+        loaded = load_bill(await _body(request))
+        return optimisation_document(optimise(loaded.bill, loaded.tariff))
 
     @app.post("/api/runs/{run_id}/verify")
     def verify(run_id: int) -> dict[str, Any]:

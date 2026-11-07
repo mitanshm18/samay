@@ -1,0 +1,231 @@
+{
+  "run_id": 3,
+  "format": "samay.optimisation/1",
+  "bill_id": "GB3",
+  "tariff": {
+    "id": "SAMAY-DEMO-1",
+    "status": "synthetic"
+  },
+  "synthetic": true,
+  "banner": "SAMAY-DEMO-1 is SYNTHETIC: its rates are made up and are not UP tariff rates. This is not a real bill.",
+  "current_total": null,
+  "profile": {
+    "contract_demand_kva": "400.000",
+    "recorded_md_kva": "395.555",
+    "demand_floor_kva": "300.000",
+    "billing_demand_kva": "395.555",
+    "kwh": "60000.000",
+    "kvah": "66666.666",
+    "power_factor": "0.900",
+    "period_hours": "744",
+    "load_factor_percent": "22.7%",
+    "zones": [
+      {
+        "zone": "peak",
+        "hours": "18:00-22:00",
+        "kvah": "13333.333",
+        "percent": "20.0%"
+      },
+      {
+        "zone": "off_peak",
+        "hours": "22:00-06:00",
+        "kvah": null,
+        "percent": null
+      },
+      {
+        "zone": "normal",
+        "hours": "06:00-18:00",
+        "kvah": "33333.333",
+        "percent": "50.0%"
+      }
+    ]
+  },
+  "counts": {
+    "actionable": "1",
+    "indicative": "2",
+    "information": "1",
+    "insufficient-data": "2"
+  },
+  "recommendations": [
+    {
+      "key": "power-factor",
+      "category": "power-factor",
+      "kind": "actionable",
+      "title": "Raise power factor to cut billed kVAh",
+      "finding": "Average power factor is 0.900. Energy is billed on kVAh, so every unit of reactive power is paid for: 66666.666 kVAh were billed for 60000.000 kWh of useful energy.",
+      "action": "Install or repair automatic power factor correction (capacitor banks) near inductive loads to bring power factor to 0.99.",
+      "confidence": "medium",
+      "confidence_reason": "Power factor is calculated from the bill; reaching the target needs correctly sized capacitors.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data: the current bill total cannot be calculated (golden bill 3 worksheet: off-peak kVAh not printed).",
+        "scenario": "power factor 0.99 (60606.061 kVAh)",
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [
+        {
+          "label": "Average power factor",
+          "value": "0.900"
+        },
+        {
+          "label": "Active energy",
+          "value": "60000.000 kWh"
+        },
+        {
+          "label": "Apparent energy (billed)",
+          "value": "66666.666 kVAh"
+        },
+        {
+          "label": "kVAh at power factor 0.99",
+          "value": "60606.061 kVAh"
+        }
+      ],
+      "basis": [
+        "Scenario: the same kWh at power factor 0.99 (kVAh = kWh / 0.99, rounded up to 0.001), each zone scaled in proportion, recalculated with the same tariff."
+      ],
+      "assumptions": [
+        "Power factor 0.99 is a common target for automatic correction; the capacitor cost is not included."
+      ],
+      "missing_data": []
+    },
+    {
+      "key": "peak-shaving",
+      "category": "peak-demand",
+      "kind": "indicative",
+      "title": "Shave the monthly demand peak",
+      "finding": "Maximum demand 395.555 kVA sets the demand charge (it is above the 300.000 kVA floor). Every kVA shaved off the single highest 15-minute peak lowers the demand charge.",
+      "action": "Find the hour of the monthly peak from the meter's load survey and avoid running the largest loads together at that time.",
+      "confidence": "medium",
+      "confidence_reason": "The demand data is measured, but the achievable reduction is an assumption.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data: the current bill total cannot be calculated (golden bill 3 worksheet: off-peak kVAh not printed).",
+        "scenario": "maximum demand reduced to 355.999 kVA",
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [
+        {
+          "label": "Contract demand",
+          "value": "400.000 kVA"
+        },
+        {
+          "label": "Recorded maximum demand",
+          "value": "395.555 kVA"
+        },
+        {
+          "label": "Demand floor (75% of contract)",
+          "value": "300.000 kVA"
+        },
+        {
+          "label": "Utilisation of contract demand",
+          "value": "98.9%"
+        }
+      ],
+      "basis": [
+        "Scenario: maximum demand 10% lower (355.999 kVA, not below the demand floor), recalculated with the same tariff."
+      ],
+      "assumptions": [
+        "A 10% lower peak is assumed to be achievable by rescheduling; the bill has no 15-minute load data to confirm it."
+      ],
+      "missing_data": []
+    },
+    {
+      "key": "load-factor",
+      "category": "consumption-pattern",
+      "kind": "indicative",
+      "title": "Peaky load profile",
+      "finding": "Load factor is 22.7%: average apparent load over the period compared with the maximum demand. A low load factor means short, high peaks relative to the average, which drive the demand charge.",
+      "action": "Spread high loads more evenly across shifts.",
+      "confidence": "medium",
+      "confidence_reason": "Uses monthly totals; interval data would show the peaks.",
+      "saving": {
+        "status": "not-applicable",
+        "note": "Not priced: shown to explain the demand charge.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [
+        "Load factor = kVAh / (maximum demand kVA x hours in the period)."
+      ],
+      "assumptions": [],
+      "missing_data": []
+    },
+    {
+      "key": "other-charges",
+      "category": "avoidable-charges",
+      "kind": "information",
+      "title": "Review charges SAMAY cannot check",
+      "finding": "These lines were taken as printed, not recalculated: Meter rent \u20b91,250.00.",
+      "action": "Check each against the tariff order and your agreement with the utility (for example meter rent for a meter you own).",
+      "confidence": "low",
+      "confidence_reason": "The tariff rules for these lines are not modelled.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data: no tariff rule for these charges.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [],
+      "assumptions": [],
+      "missing_data": []
+    },
+    {
+      "key": "load-shift",
+      "category": "load-shift",
+      "kind": "insufficient-data",
+      "title": "Load shifting: insufficient data",
+      "finding": "Shifting needs the peak, normal and off-peak kVAh from the meter.",
+      "action": "Enter all three time-of-day zone readings printed on the bill.",
+      "confidence": "low",
+      "confidence_reason": "Zone readings are missing.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [],
+      "assumptions": [],
+      "missing_data": [
+        "off_peak zone: golden bill 3 worksheet: off-peak kVAh not printed"
+      ]
+    },
+    {
+      "key": "trend",
+      "category": "consumption-pattern",
+      "kind": "insufficient-data",
+      "title": "Unusual consumption: insufficient data",
+      "finding": "Spotting unusual consumption needs earlier bills for the same meter.",
+      "action": "Save at least three months of bills for meter M-GB3 to compare.",
+      "confidence": "low",
+      "confidence_reason": "One bill has no baseline.",
+      "saving": {
+        "status": "insufficient-data",
+        "note": "Insufficient data.",
+        "scenario": null,
+        "current_total": null,
+        "scenario_total": null,
+        "amount": null
+      },
+      "metrics": [],
+      "basis": [],
+      "assumptions": [],
+      "missing_data": [
+        "earlier bills for the same meter"
+      ]
+    }
+  ]
+}
