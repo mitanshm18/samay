@@ -21,7 +21,7 @@ DB_CODE := src/samay/db/*,src/samay/api/*
 	backend-check-uv backend-test backend-golden backend-lint backend-typecheck backend-check \
 	bill-check-file bill-validate bill-calculate bill-reconcile \
 	db-up db-down db-status db-migrate backend-db-test bill-save bill-history bill-show bill-verify \
-	bill-run-check api
+	bill-run-check api web-check-npm web-install web web-check
 
 help: ## Show available commands
 	@echo "SAMAY commands (doctor and check-docker-scope are read-only)"
@@ -125,3 +125,21 @@ API_PORT ?= 8000
 
 api: backend-check-uv ## Run the SAMAY API on 127.0.0.1:$(API_PORT) (needs db-up and db-migrate)
 	@$(DB_ENV) $(UV_RUN) env PYTHONPATH=src uvicorn samay.api.app:app --host 127.0.0.1 --port $(API_PORT)
+
+# Frontend (Step 6). npm installs into frontend/node_modules only; nothing global.
+# The dev server proxies /api to the API above (make api).
+WEB_PORT ?= 5173
+
+web-check-npm:
+	@command -v npm >/dev/null || { echo "npm is not installed. Install Node.js 20 or newer first."; exit 1; }
+
+web-install: web-check-npm ## Install the frontend's pinned packages into frontend/node_modules (npm ci)
+	cd frontend && npm ci --no-audit --no-fund
+
+web: web-check-npm ## Run the frontend on http://127.0.0.1:$(WEB_PORT) (needs web-install and make api)
+	@test -d frontend/node_modules || { echo "Run make web-install first."; exit 1; }
+	cd frontend && npx vite --host 127.0.0.1 --port $(WEB_PORT) --strictPort
+
+web-check: web-check-npm ## Frontend type check, tests and production build (needs web-install)
+	@test -d frontend/node_modules || { echo "Run make web-install first."; exit 1; }
+	cd frontend && npm run typecheck && npm test && npm run build

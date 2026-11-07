@@ -60,6 +60,25 @@ jobs:
       - name: Golden-bill merge gate (hand-checked bills)
         run: make backend-golden
 
+  # Step 6: the React frontend. Packages come from frontend/package-lock.json.
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install (npm ci)
+        run: make web-install
+
+      - name: Type check, tests and production build
+        run: make web-check
+
   # Step 4: SAMAY's database code against a real PostgreSQL 16. The service
   # container runs on GitHub's runner only; nothing here touches a developer Mac.
   database:

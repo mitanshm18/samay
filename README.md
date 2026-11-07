@@ -7,9 +7,9 @@ SAMAY reads a factory's electricity bill and production schedule, recomputes the
 from the tariff rules, explains every rupee, and shows which batch timings would cost less.
 Every number on screen comes from a real calculation, with its source and assumptions visible.
 
-> **Status:** Milestone 1, Step 5 (local HTTP API). Bills can be recalculated,
-> reconciled with the printed bill, saved and shown again, from the command line or
-> the API ([docs/api.md](docs/api.md)). No front end yet.
+> **Status:** Milestone 1, Step 6 (demo front end). Bills can be recalculated,
+> reconciled with the printed bill, saved and shown again, from the command line, the
+> API ([docs/api.md](docs/api.md)) or a local web page ([frontend/README.md](frontend/README.md)).
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
 
 ## What is in the repository now
@@ -24,7 +24,7 @@ Every number on screen comes from a real calculation, with its source and assump
 | `backend/src/samay/tariffs/`, `billing/`, `io/`, `cli.py` | Tariff model, bill recalculation, reconciliation, JSON formats, `python -m samay.cli` |
 | `backend/src/samay/db/`, `backend/migrations/` | Saved bills and reports in SAMAY's database, `python -m samay.db` |
 | `backend/src/samay/api/` | Local HTTP API over the saved bills (`make api`) |
-| `frontend/` | Placeholder; code arrives in Step 6 |
+| `frontend/` | Local web page over the API: bill history, check a bill, line-by-line report (`make web`) |
 
 ## First-time setup on a Mac (read-only)
 
@@ -65,6 +65,8 @@ make bill-save FILE=examples/bills/differing.json   # reconcile and save
 make bill-history         # saved bills, newest first
 make bill-show RUN=1      # a saved report exactly as produced
 make api                  # local API on 127.0.0.1:8000 (docs/api.md)
+make web-install          # once: frontend packages into frontend/node_modules
+make web                  # web page on http://127.0.0.1:5173 (with make api running)
 make db-down              # stop the database; saved data is kept
 ```
 

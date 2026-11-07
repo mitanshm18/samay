@@ -25,6 +25,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+*.tsbuildinfo
 
 # Generated or downloaded data (re-created by scripts)
 data/public/
