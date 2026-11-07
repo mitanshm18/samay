@@ -734,4 +734,21 @@ textarea:focus-visible {
   h1 {
     font-size: 1.3rem;
   }
+
+  /* Wide tables keep readable columns and scroll sideways inside their card. */
+  .card > .table-wrap > .table,
+  .card details .table-wrap > .table {
+    min-width: 960px;
+  }
+
+  .card > .table-wrap::before,
+  .card details .table-wrap::before {
+    content: "Swipe sideways to see every column \2192";
+    display: block;
+    position: sticky;
+    left: 0;
+    padding: 0 0 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
 }

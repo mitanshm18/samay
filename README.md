@@ -7,9 +7,10 @@ SAMAY reads a factory's electricity bill and production schedule, recomputes the
 from the tariff rules, explains every rupee, and shows which batch timings would cost less.
 Every number on screen comes from a real calculation, with its source and assumptions visible.
 
-> **Status:** Milestone 1, Step 6 (demo front end). Bills can be recalculated,
+> **Status:** Milestone 1, Step 7 (demo readiness). Bills can be recalculated,
 > reconciled with the printed bill, saved and shown again, from the command line, the
 > API ([docs/api.md](docs/api.md)) or a local web page ([frontend/README.md](frontend/README.md)).
+> To run the demo, see [docs/demo.md](docs/demo.md).
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
 
 ## What is in the repository now
@@ -67,6 +68,7 @@ make bill-show RUN=1      # a saved report exactly as produced
 make api                  # local API on 127.0.0.1:8000 (docs/api.md)
 make web-install          # once: frontend packages into frontend/node_modules
 make web                  # web page on http://127.0.0.1:5173 (with make api running)
+make demo-check           # every example bill through the running app
 make db-down              # stop the database; saved data is kept
 ```
 

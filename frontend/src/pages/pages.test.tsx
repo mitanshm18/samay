@@ -46,6 +46,23 @@ describe("run view", () => {
     expect(screen.getAllByText(/ESTIMATED|Estimated/).length).toBeGreaterThan(0);
   });
 
+  it("titles the totals section by what the totals did", async () => {
+    await showRun(differing); // a line differs, but the totals match
+    expect(screen.getByRole("heading", { name: "Why the totals match" })).toBeTruthy();
+  });
+
+  it("says when the totals cannot be compared", async () => {
+    await showRun(missing);
+    expect(screen.getByRole("heading", { name: "Why the totals cannot be compared" })).toBeTruthy();
+  });
+
+  it("says when the totals differ", async () => {
+    const changed = structuredClone(differing);
+    Object.assign(changed.report.reconciliation.total.difference, { value: "1.00", paise: "100" });
+    await showRun(changed);
+    expect(screen.getByRole("heading", { name: "Why the totals differ" })).toBeTruthy();
+  });
+
   it("labels a calculate-only run", async () => {
     await showRun(calculateOnly);
     expect(screen.getAllByText("Calculated only").length).toBeGreaterThan(0);

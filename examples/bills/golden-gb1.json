@@ -1,0 +1,104 @@
+{
+  "format": "samay.bill/1",
+  "bill_id": "GB1",
+  "tariff_id": "SAMAY-DEMO-1",
+  "data_status": "synthetic",
+  "period": {
+    "meter_id": "M-GB1",
+    "start": "2026-06-01T00:00:00+05:30",
+    "end": "2026-07-01T00:00:00+05:30"
+  },
+  "readings": {
+    "contract_demand_kva": {
+      "value": "250.000",
+      "provenance": "entered",
+      "note": "golden bill 1 worksheet, contract demand"
+    },
+    "recorded_md_kva": {
+      "value": "171.250",
+      "provenance": "entered",
+      "note": "golden bill 1 worksheet, recorded MD"
+    },
+    "kwh": {
+      "value": "41250.000",
+      "provenance": "entered",
+      "note": "golden bill 1 worksheet, kWh"
+    },
+    "kvah": {
+      "value": "48500.500",
+      "provenance": "entered",
+      "note": "golden bill 1 worksheet, kVAh"
+    },
+    "tod_kvah": {
+      "peak": {
+        "value": "9700.100",
+        "provenance": "entered",
+        "note": "golden bill 1 worksheet, peak kVAh"
+      },
+      "off_peak": {
+        "value": "14550.150",
+        "provenance": "entered",
+        "note": "golden bill 1 worksheet, off-peak kVAh"
+      },
+      "normal": {
+        "value": "24250.250",
+        "provenance": "entered",
+        "note": "golden bill 1 worksheet, normal kVAh"
+      }
+    }
+  },
+  "printed": {
+    "lines": [
+      {
+        "code": "demand_charge",
+        "label": "demand charge",
+        "amount_rupees": {
+          "value": "75000.00",
+          "provenance": "entered",
+          "note": "golden bill 1 printed variant, demand_charge"
+        }
+      },
+      {
+        "code": "energy_charge",
+        "label": "energy charge",
+        "amount_rupees": {
+          "value": "436504.50",
+          "provenance": "entered",
+          "note": "golden bill 1 printed variant, energy_charge"
+        }
+      },
+      {
+        "code": "tod_adjustment",
+        "label": "tod adjustment",
+        "amount_rupees": {
+          "value": "0.00",
+          "provenance": "entered",
+          "note": "golden bill 1 printed variant, tod_adjustment"
+        }
+      },
+      {
+        "code": "electricity_duty",
+        "label": "electricity duty",
+        "amount_rupees": {
+          "value": "25575.23",
+          "provenance": "entered",
+          "note": "golden bill 1 printed variant, electricity_duty"
+        }
+      },
+      {
+        "code": "rounding_off",
+        "label": "rounding off",
+        "amount_rupees": {
+          "value": "0.27",
+          "provenance": "entered",
+          "note": "golden bill 1 printed variant, rounding_off"
+        }
+      }
+    ],
+    "total_rupees": {
+      "value": "537080.00",
+      "provenance": "entered",
+      "note": "golden bill 1 printed variant, total"
+    }
+  }
+}

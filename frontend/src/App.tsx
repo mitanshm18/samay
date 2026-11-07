@@ -21,13 +21,19 @@ function useRoute(): Route {
 function HealthDot() {
   const [health, setHealth] = useState<Health | "down" | null>(null);
   useEffect(() => {
+    // Checked again every 10 seconds, so the badge shows when the API or database
+    // stops and when it is back.
     let live = true;
-    api.health().then(
-      (h) => live && setHealth(h),
-      () => live && setHealth("down"),
-    );
+    const check = () =>
+      api.health().then(
+        (h) => live && setHealth(h),
+        () => live && setHealth("down"),
+      );
+    check();
+    const timer = window.setInterval(check, 10_000);
     return () => {
       live = false;
+      window.clearInterval(timer);
     };
   }, []);
   const up = health !== null && health !== "down";

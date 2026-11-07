@@ -26,6 +26,7 @@ make web-check                  # type check, tests, production build
 ## Demo workflow
 
 1. **Check a bill**: upload a `samay.bill/1` file, paste one, or pick a sample bill.
+   `golden-gb1` to `golden-gb3` are the three bills checked by hand.
 2. **Validate**: every problem is listed with its JSON path; nothing is saved.
 3. **Calculate, reconcile and save**: SAMAY recalculates each line, compares it with
    the printed bill and saves the exact input and report.
