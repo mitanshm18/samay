@@ -62,7 +62,8 @@
         "scenario": "power factor 0.99 (60606.061 kVAh)",
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [
         {
@@ -105,7 +106,8 @@
         "scenario": "maximum demand reduced to 355.999 kVA",
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [
         {
@@ -148,7 +150,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [
@@ -172,7 +175,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [],
@@ -194,7 +198,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [],
@@ -218,7 +223,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [],

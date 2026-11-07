@@ -3,7 +3,9 @@ import { api, type Health } from "./api";
 import { Dashboard } from "./pages/Dashboard";
 import { NewBill } from "./pages/NewBill";
 import { RunView } from "./pages/RunView";
+import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import { type Route, parseRoute } from "./router";
+import { useTheme } from "./theme";
 
 function useRoute(): Route {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
@@ -62,6 +64,7 @@ function Icon({ d }: { d: string }) {
 
 export function App() {
   const route = useRoute();
+  const { pref, setPref } = useTheme();
   return (
     <div className="shell">
       <div className="backdrop" aria-hidden="true" />
@@ -94,6 +97,7 @@ export function App() {
           )}
         </nav>
         <div className="sidebar-foot">
+          <ThemeSwitcher pref={pref} onChange={setPref} />
           <HealthDot />
           <p>
             Every amount comes from SAMAY's calculation engine through the local API. The page does no

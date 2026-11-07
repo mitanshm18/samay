@@ -50,9 +50,13 @@ adds seven more runs (saved runs are never edited or deleted).
 Open http://127.0.0.1:5173. The status at the bottom of the sidebar (top right on a phone)
 must say **API and database online**.
 
+Pick the theme that suits the room with the switcher at the bottom of the sidebar:
+**Light** reads best on a projector, **Dark** on a laptop screen. The choice is remembered.
+
 ## Demo script (about 5 minutes)
 
-1. **Dashboard.** "Every bill SAMAY has checked. Each run is saved exactly as entered and
+1. **Dashboard.** Hover the chart bars for each run's totals; the *Optimisation* card shows
+   the latest bill's largest illustrative saving. "Every bill SAMAY has checked. Each run is saved exactly as entered and
    can be re-verified." Point at the counts: clean, needs review, calculated only.
 2. **Check a bill → `golden-gb2.json` → Validate.** "Valid for tariff SAMAY-DEMO-1; the
    tariff is synthetic and labelled everywhere."

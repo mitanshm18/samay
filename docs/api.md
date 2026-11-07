@@ -85,7 +85,8 @@ A saved run's summary:
     "confidence": "high", "confidence_reason": "...",
     "saving": {"status": "illustrative", "note": "...", "scenario": "...",
                "current_total": {...}, "scenario_total": {...},
-               "amount": {"paise": "3898100", "inr": "₹38,981.00"}},
+               "amount": {"paise": "3898100", "inr": "₹38,981.00"},
+               "share_of_bill": "4.4%"},
     "metrics": [{"label": "...", "value": "..."}],
     "basis": ["..."], "assumptions": ["..."], "missing_data": []
   }]
@@ -94,7 +95,8 @@ A saved run's summary:
 
 `saving.status` is `illustrative` (synthetic tariff or readings: not a real saving),
 `estimated` (verified tariff and readings), `insufficient-data` (amount `null`) or
-`not-applicable`. Quantities are decimal strings; `null` means MISSING.
+`not-applicable`. `share_of_bill` is the amount as a share of the current total (one
+decimal place, exact rounding), or `null`. Quantities are decimal strings; `null` means MISSING.
 
 Errors: 422 invalid bill (the validation document lists every problem), 404 unknown
 run, 503 database not running or not configured, 500 SAMAY bug (no details). Nothing

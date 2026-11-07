@@ -6,6 +6,7 @@ that is not available is null with the reason alongside.
 
 from __future__ import annotations
 
+from fractions import Fraction
 from typing import Any
 
 from samay.core import Money
@@ -23,6 +24,20 @@ def _quantity(value: Any) -> str | None:
     return None if value is None else str(value.value)
 
 
+def _share_of_bill(saving: Saving) -> str | None:
+    """The saving as a share of the current bill, one decimal place (display only)."""
+    amount, current = saving.amount, saving.current_total
+    if amount is None or current is None or current.paise <= 0:
+        return None
+    tenths = Fraction(amount.paise * 1000, current.paise)
+    whole, remainder = divmod(tenths.numerator, tenths.denominator)
+    if 2 * remainder >= tenths.denominator:
+        whole += 1
+    sign = "-" if whole < 0 else ""
+    whole = abs(whole)
+    return f"{sign}{whole // 10}.{whole % 10}%"
+
+
 def _saving(saving: Saving) -> dict[str, Any]:
     return {
         "status": saving.status.value,
@@ -31,6 +46,7 @@ def _saving(saving: Saving) -> dict[str, Any]:
         "current_total": _money(saving.current_total),
         "scenario_total": _money(saving.scenario_total),
         "amount": _money(saving.amount),
+        "share_of_bill": _share_of_bill(saving),
     }
 
 

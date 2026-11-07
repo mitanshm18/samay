@@ -42,6 +42,13 @@ savings, and must never present a synthetic-tariff figure as a real saving.
    hand-written SVG charts, and the same React, Vite and Zod stack. Run pages gain tabs
    (`#/runs/<id>`, `/optimisation`, `/calculation`); old links still work.
 
+9. **Share of bill (7 Nov 2026, later).** Each saving also carries `share_of_bill`, the
+   amount over the current total as text with one decimal place, worked out exactly
+   in the backend from integer paise. The UI shows it; it does no arithmetic itself.
+10. **Light, dark and system themes.** Same tokens, two palettes; the illustrative
+    stamp (dashed, striped, pink) and the estimated stamp (solid, green) differ by
+    shape as well as colour, so they stay distinct in both themes and in greyscale.
+
 ## Consequences
 
 The demo shows illustrative savings with the synthetic tariff, clearly labelled. With a

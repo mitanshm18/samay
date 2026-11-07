@@ -181,6 +181,7 @@ export const Recommendation = z.object({
     current_total: Money,
     scenario_total: Money,
     amount: Money,
+    share_of_bill: z.string().regex(/^-?[0-9]+\.[0-9]%$/).nullable(),
   }),
   metrics: z.array(Metric),
   basis: z.array(z.string()),

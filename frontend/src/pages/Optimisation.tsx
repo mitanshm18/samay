@@ -53,16 +53,31 @@ function ConfidenceMeter({ level, reason }: { level: Recommendation["confidence"
   );
 }
 
-function SavingBlock({ item }: { item: Recommendation }) {
+const STAMP: Record<Recommendation["saving"]["status"], string> = {
+  illustrative: "Illustrative · synthetic tariff, not a real saving",
+  estimated: "Estimated · verified tariff and readings",
+  "insufficient-data": "Insufficient data",
+  "not-applicable": "Not priced",
+};
+
+function SavingBlock({ item, scale }: { item: Recommendation; scale: string | null }) {
   const saving = item.saving;
   if (saving.amount) {
+    // Bar width only (geometry): the saving against the largest saving on this bill.
+    const width = scale ? Math.max(4, Math.min(100, (Number(saving.amount.paise) / Number(scale)) * 100)) : 0;
     return (
       <div className={`saving saving-${saving.status}`}>
         <span className="saving-label">
           {saving.status === "illustrative" ? "Illustrative saving per bill" : "Estimated saving per bill"}
         </span>
         <span className="saving-amount">{saving.amount.inr}</span>
-        {saving.status === "illustrative" && <span className="saving-tag">Synthetic tariff · not a real saving</span>}
+        {saving.share_of_bill && <span className="saving-share">{saving.share_of_bill} of this bill</span>}
+        <span className="impact" aria-hidden="true">
+          <span style={{ width: `${width}%` }} />
+        </span>
+        <span className={`saving-stamp stamp-${saving.status}`}>
+          {saving.status === "illustrative" ? "Synthetic tariff · not a real saving" : "Verified tariff and readings"}
+        </span>
       </div>
     );
   }
@@ -72,11 +87,14 @@ function SavingBlock({ item }: { item: Recommendation }) {
       <span className="saving-amount muted-amount">
         {saving.status === "insufficient-data" ? "Insufficient data" : "Not priced"}
       </span>
+      <span className="saving-share">
+        {saving.status === "insufficient-data" ? "SAMAY does not guess a figure" : "a finding, not a ₹ saving"}
+      </span>
     </div>
   );
 }
 
-export function RecommendationCard({ item, index }: { item: Recommendation; index: number }) {
+export function RecommendationCard({ item, index, scale = null }: { item: Recommendation; index: number; scale?: string | null }) {
   const [open, setOpen] = useState(false);
   const hasDetail =
     item.basis.length + item.assumptions.length + item.missing_data.length + item.metrics.length > 0 ||
@@ -101,8 +119,18 @@ export function RecommendationCard({ item, index }: { item: Recommendation; inde
             {item.action}
           </p>
         </div>
-        <SavingBlock item={item} />
+        <SavingBlock item={item} scale={scale} />
       </div>
+      {item.kind === "insufficient-data" && item.missing_data.length > 0 && (
+        <div className="needs">
+          <span>To work this out, SAMAY needs</span>
+          <ul>
+            {item.missing_data.map((m) => (
+              <li key={m}>{m}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <footer className="rec-foot">
         <ConfidenceMeter level={item.confidence} reason={item.confidence_reason} />
         {hasDetail && (
@@ -183,6 +211,7 @@ export function RecommendationCard({ item, index }: { item: Recommendation; inde
 export function OptimisationPanel({ runId }: { runId: number }) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [filter, setFilter] = useState<Filter>("all");
+  const [sort, setSort] = useState<"priority" | "saving">("priority");
 
   useEffect(() => {
     let live = true;
@@ -223,7 +252,17 @@ export function OptimisationPanel({ runId }: { runId: number }) {
   const priced = recs.filter((r) => r.saving.amount !== null);
   const largest = largestPaise(priced.map((r) => r.saving.amount!.paise));
   const top = priced.find((r) => r.saving.amount!.paise === largest);
-  const shown = filter === "all" ? recs : recs.filter((r) => r.kind === filter);
+  const filtered = filter === "all" ? recs : recs.filter((r) => r.kind === filter);
+  // Largest saving first, compared exactly as integers; unpriced items keep their order after.
+  const shown =
+    sort === "priority"
+      ? filtered
+      : [...filtered].sort((a, b) => {
+          const x = a.saving.amount ? BigInt(a.saving.amount.paise) : null;
+          const y = b.saving.amount ? BigInt(b.saving.amount.paise) : null;
+          if (x === null || y === null) return x === null ? (y === null ? 0 : 1) : -1;
+          return x === y ? 0 : x > y ? -1 : 1;
+        });
 
   return (
     <div className="opt">
@@ -240,11 +279,14 @@ export function OptimisationPanel({ runId }: { runId: number }) {
           <span className="eyebrow">Largest priced opportunity</span>
           {top ? (
             <>
-              <span className="opt-hero-amount">{top.saving.amount!.inr}</span>
+              <span className={`opt-hero-amount${top.saving.status === "illustrative" ? " is-illustrative" : ""}`}>
+                {top.saving.amount!.inr}
+              </span>
               <span className="opt-hero-title">{top.title}</span>
+              <span className={`saving-stamp stamp-${top.saving.status}`}>{STAMP[top.saving.status]}</span>
               <span className="opt-hero-tag">
-                {top.saving.status === "illustrative" ? "Illustrative, per bill" : "Estimated, per bill"} ·
-                not additive with other scenarios
+                Per bill{top.saving.share_of_bill ? `, ${top.saving.share_of_bill} of this bill` : ""}. Each
+                scenario is against the current bill alone, so savings are not added together.
               </span>
             </>
           ) : (
@@ -310,9 +352,31 @@ export function OptimisationPanel({ runId }: { runId: number }) {
             ))}
           </div>
         </div>
+        <div className="rec-tools">
+          <ul className="saving-legend" aria-label="What the saving labels mean">
+            <li>
+              <span className="saving-stamp stamp-illustrative">Illustrative</span> recalculated with a synthetic
+              tariff: shows how a saving arises, not a real figure
+            </li>
+            <li>
+              <span className="saving-stamp stamp-estimated">Estimated</span> verified tariff and readings only
+            </li>
+            <li>
+              <span className="saving-stamp stamp-insufficient-data">Insufficient data</span> an input is missing, so no
+              figure is shown
+            </li>
+          </ul>
+          <label className="sort">
+            Sort
+            <select value={sort} onChange={(e) => setSort(e.target.value as "priority" | "saving")}>
+              <option value="priority">Priority (actionable first)</option>
+              <option value="saving">Largest saving first</option>
+            </select>
+          </label>
+        </div>
         <div className="recs">
           {shown.map((item, i) => (
-            <RecommendationCard key={item.key} item={item} index={i} />
+            <RecommendationCard key={item.key} item={item} index={i} scale={largest} />
           ))}
           {shown.length === 0 && <p className="empty">Nothing in this group.</p>}
         </div>
