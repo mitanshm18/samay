@@ -6,9 +6,9 @@ import io
 import json
 
 import pytest
-from dbhelpers import EXAMPLES, example
 from sqlalchemy import Engine
 
+from dbhelpers import EXAMPLES, example
 from samay.db import __main__ as db_cli
 from samay.db import save_bill
 from samay.io import json_report

@@ -1,8 +1,10 @@
-"""The calculation engine never depends on the database (decision 0005).
+"""The calculation engine never depends on the database or the API
+(decisions 0005 and 0006).
 
 core, tariffs, billing, io and the bill command line must not import
-SQLAlchemy, psycopg, Alembic or samay.db, so they stay pure and testable
-without any server. core stays standard-library only.
+SQLAlchemy, psycopg, Alembic, FastAPI, Starlette, uvicorn, pydantic, samay.db or
+samay.api, so they stay pure and testable without any server. samay.db does not
+import the API. core stays standard-library only.
 """
 
 from __future__ import annotations
@@ -18,7 +20,19 @@ import samay
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "samay"
 ENGINE = [*(SRC / p for p in ("core", "tariffs", "billing", "io")), SRC / "cli.py"]
-FORBIDDEN = ("sqlalchemy", "psycopg", "alembic", "samay.db")
+FORBIDDEN = (
+    "sqlalchemy",
+    "psycopg",
+    "alembic",
+    "samay.db",
+    "fastapi",
+    "starlette",
+    "uvicorn",
+    "pydantic",
+    "samay.api",
+)
+# The database layer does not depend on the API either.
+DB_FORBIDDEN = ("fastapi", "starlette", "uvicorn", "pydantic", "samay.api")
 
 
 def _files() -> list[Path]:
@@ -51,13 +65,23 @@ def _imports_in(source: str, package: str) -> list[str]:
 
 
 @pytest.mark.parametrize("path", _files(), ids=lambda p: str(p.relative_to(SRC)))
-def test_engine_does_not_import_the_database(path: Path) -> None:
-    bad = [
+def test_engine_does_not_import_the_database_or_api(path: Path) -> None:
+    assert _bad(path, FORBIDDEN) == []
+
+
+def _bad(path: Path, forbidden: tuple[str, ...]) -> list[str]:
+    return [
         name
         for name in _imports(path)
-        if any(name == f or name.startswith(f + ".") for f in FORBIDDEN)
+        if any(name == f or name.startswith(f + ".") for f in forbidden)
     ]
-    assert bad == []
+
+
+@pytest.mark.parametrize(
+    "path", sorted((SRC / "db").rglob("*.py")), ids=lambda p: str(p.relative_to(SRC))
+)
+def test_database_layer_does_not_import_the_api(path: Path) -> None:
+    assert _bad(path, DB_FORBIDDEN) == []
 
 
 def test_core_uses_only_the_standard_library() -> None:

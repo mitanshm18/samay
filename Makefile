@@ -13,14 +13,15 @@ UV_RUN := cd backend && UV_PYTHON_DOWNLOADS=never uv run --locked
 # Database commands (Step 4) read SAMAY_DB_PASSWORD / SAMAY_DB_PORT from .env if it
 # exists; SAMAY_DATABASE_URL (used in CI) wins over them. Local database only.
 DB_ENV := $(if $(wildcard .env),set -a && . ./.env && set +a &&,)
-# Database code is covered by backend-db-test (needs the database), not backend-test.
-DB_CODE := src/samay/db/*
+# Database and API code is covered by backend-db-test (needs the database), not backend-test.
+DB_CODE := src/samay/db/*,src/samay/api/*
 
 .DEFAULT_GOAL := help
 .PHONY: help doctor doctor-ci check-docker-scope test-scripts lint-scripts check \
 	backend-check-uv backend-test backend-golden backend-lint backend-typecheck backend-check \
 	bill-check-file bill-validate bill-calculate bill-reconcile \
-	db-up db-down db-status db-migrate backend-db-test bill-save bill-history bill-show bill-verify
+	db-up db-down db-status db-migrate backend-db-test bill-save bill-history bill-show bill-verify \
+	bill-run-check api
 
 help: ## Show available commands
 	@echo "SAMAY commands (doctor and check-docker-scope are read-only)"
@@ -50,7 +51,7 @@ backend-check-uv:
 	@command -v uv >/dev/null 2>&1 || { echo "uv is not installed; see docs/development.md"; exit 1; }
 
 backend-test: backend-check-uv ## Run backend tests with branch coverage (fails below 95%)
-	@$(UV_RUN) coverage run --omit='$(DB_CODE)' -m pytest --ignore=tests/golden --ignore=tests/db
+	@$(UV_RUN) coverage run --omit='$(DB_CODE)' -m pytest --ignore=tests/golden --ignore=tests/db --ignore=tests/api
 	@$(UV_RUN) coverage report --omit='$(DB_CODE)'
 
 backend-golden: backend-check-uv ## Golden-bill merge gate (fails until all three bills are hand-checked)
@@ -96,14 +97,16 @@ db-status: ## Show SAMAY's database container (read-only)
 db-migrate: backend-check-uv ## Apply database migrations (alembic upgrade head)
 	@$(DB_ENV) $(UV_RUN) alembic upgrade head
 
-backend-db-test: backend-check-uv ## Database tests in throwaway samay_test_* databases (needs db-up)
-	@$(DB_ENV) $(UV_RUN) coverage run --data-file=.coverage.db -m pytest tests/db
+backend-db-test: backend-check-uv ## Database and API tests in throwaway samay_test_* databases (needs db-up)
+	@$(DB_ENV) $(UV_RUN) coverage run --data-file=.coverage.db -m pytest tests/db tests/api
 	@$(UV_RUN) coverage report --data-file=.coverage.db --include='$(DB_CODE)' --fail-under=95
 
 DB_CLI = $(DB_ENV) $(UV_RUN) env PYTHONPATH=src python -m samay.db
 
+# Exit code 1 from save means "not clean": a reconciliation result, already explained in
+# the output, so make does not report it as an error. 2 (invalid) and 3 (database) still fail.
 bill-save: bill-check-file ## Reconcile a bill and save input + report (FILE=...)
-	@$(DB_CLI) save "$(abspath $(FILE))"
+	@$(DB_CLI) save "$(abspath $(FILE))"; code=$$?; if [ $$code -eq 1 ]; then exit 0; fi; exit $$code
 
 bill-history: backend-check-uv ## List saved bills, newest first
 	@$(DB_CLI) list
@@ -116,3 +119,9 @@ bill-show: bill-run-check ## Print a saved report exactly as produced (RUN=...)
 
 bill-verify: bill-run-check ## Recalculate a saved bill and compare with its saved report (RUN=...)
 	@$(DB_CLI) verify "$(RUN)"
+
+# API (Step 5). Local only: 127.0.0.1. Docs at http://127.0.0.1:8000/api/docs
+API_PORT ?= 8000
+
+api: backend-check-uv ## Run the SAMAY API on 127.0.0.1:$(API_PORT) (needs db-up and db-migrate)
+	@$(DB_ENV) $(UV_RUN) env PYTHONPATH=src uvicorn samay.api.app:app --host 127.0.0.1 --port $(API_PORT)
