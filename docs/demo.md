@@ -40,9 +40,11 @@ make demo-check
 `make demo-check` sends every bill in `examples/bills` through the running app: validate,
 calculate, reconcile, save, open, download the exact report and bill file, verify. It
 checks that a MISSING total is never shown as an amount, and that the three golden bills
-give the hand-checked totals and line statuses. It prints one `ok` line per bill and ends
-with `Demo check passed.` It saves one run per bill, so after it the bill history has
-demo data. Each repeat adds seven more runs (saved runs are never edited or deleted).
+give the hand-checked totals and line statuses. It prints an `ok` line for the API, the web
+page and each of the seven bills, and ends with `Demo check passed.` It saves one run per
+bill, so after it the bill history has demo data, including GB2 and GB3; saving them again
+live in the demo simply adds new runs. Run it before the audience arrives. Each repeat
+adds seven more runs (saved runs are never edited or deleted).
 
 Open http://127.0.0.1:5173. The top right must say **API and database online**.
 
