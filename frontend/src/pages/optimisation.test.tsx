@@ -37,7 +37,8 @@ describe("cost optimisation", () => {
     await show(gb2);
     const hero = screen.getByText("Largest priced opportunity").closest(".opt-hero") as HTMLElement;
     expect(within(hero).getByText("₹53,072.00")).toBeTruthy();
-    expect(within(hero).getByText(/not additive/)).toBeTruthy();
+    expect(within(hero).getByText(/not added together/)).toBeTruthy();
+    expect(within(hero).getByText(/6.0% of this bill/)).toBeTruthy();
   });
 
   it("shows Insufficient data, never ₹0, when the bill total is missing", async () => {
@@ -98,5 +99,35 @@ describe("cost optimisation", () => {
     await screen.findByRole("heading", { name: "Recommendations" });
     expect(screen.getByRole("tab", { name: /Cost optimisation/ }).getAttribute("aria-selected")).toBe("true");
     expect(screen.queryByRole("heading", { name: /Why the totals/ })).toBeNull();
+  });
+});
+
+describe("recommendation cards", () => {
+  it("stamps illustrative savings and shows their share of the bill", async () => {
+    await show(gb2);
+    const excess = card("Avoid the excess demand penalty");
+    expect(within(excess).getByText("4.4% of this bill")).toBeTruthy();
+    expect(excess.querySelector(".saving-illustrative")).toBeTruthy();
+    expect(excess.querySelector(".stamp-illustrative")).toBeTruthy();
+    expect(excess.querySelector(".stamp-estimated")).toBeNull();
+  });
+
+  it("lists what is needed when data is insufficient", async () => {
+    await show(gb2);
+    const trend = card("Unusual consumption: insufficient data");
+    expect(within(trend).getByText("To work this out, SAMAY needs")).toBeTruthy();
+    expect(within(trend).getByText("SAMAY does not guess a figure")).toBeTruthy();
+    expect(within(trend).queryByText(/₹/)).toBeNull();
+  });
+
+  it("sorts by the largest saving, compared exactly", async () => {
+    await show(gb2);
+    fireEvent.change(screen.getByLabelText("Sort"), { target: { value: "saving" } });
+    const titles = screen.getAllByRole("article").map((a) => a.querySelector("h3")?.textContent);
+    expect(titles.slice(0, 3)).toEqual([
+      "Raise power factor to cut billed kVAh",
+      "Avoid the excess demand penalty",
+      "Shift flexible load out of peak hours",
+    ]);
   });
 });

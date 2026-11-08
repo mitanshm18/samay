@@ -45,6 +45,23 @@ make web-check                  # type check, tests, production build
 7. **Bill history** lists every saved run, with a chart of recent totals (a MISSING
    total is drawn hatched, never as zero).
 
+**Themes.** The switcher at the bottom of the sidebar (top right on a phone) offers
+Light, Dark and System. The choice is saved in the browser (`localStorage`, key
+`samay-theme`) and applied by a small script in `index.html` before the first paint,
+so the page does not flash the wrong theme. Both themes share one set of CSS
+variables in `src/styles.css`; the light theme uses darker colours so text keeps at
+least 4.5:1 contrast on white.
+
+**Dashboard.** The audit (what the bills say) and the optimisation insight (where the
+next bill could cost less, for the latest run) are separate, labelled zones. The
+chart of recent totals has a tooltip on hover or keyboard focus with the API's own
+total, printed total and difference.
+
+**Savings labels.** Illustrative savings (synthetic tariff) carry a dashed, striped
+pink stamp and a dashed underline; estimated savings (verified tariff and readings) a
+solid green stamp; insufficient data an amber stamp and the list of what is missing.
+Each saving shows its share of the bill, worked out by the backend.
+
 The charts are hand-written SVG and CSS. They convert API strings with `Number()` only
 to size bars and needles; every number shown is the API's own text.
 

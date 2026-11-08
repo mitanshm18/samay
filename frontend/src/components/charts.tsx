@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import type { Optimisation, RunSummary } from "../api";
-import { quantity } from "../format";
+import { largestPaise, quantity } from "../format";
 
 type Profile = Optimisation["profile"];
 
@@ -184,30 +184,80 @@ export function PowerFactorDial({ profile }: { profile: Profile }) {
   );
 }
 
-/** Calculated totals of the most recent runs, oldest first. A MISSING total is a short
- * hatched stub (never a tall bar that could be read as a large amount, never zero). */
+/** Calculated totals of the most recent runs, oldest first, with a tooltip per bar.
+ * A MISSING total is a short hatched stub (never a tall bar that could be read as a
+ * large amount, never zero). The axis label is the largest total's own API text. */
 export function HistoryChart({ runs }: { runs: RunSummary[] }) {
+  const [active, setActive] = useState<number | null>(null);
   const recent = runs.slice(0, 14).reverse();
+  if (recent.length === 0) return null;
   const values = recent.map((r) => (r.totals.calculated ? Number(r.totals.calculated.paise) : null));
   const max = Math.max(1, ...values.map((v) => v ?? 0));
-  if (recent.length === 0) return null;
+  const top = largestPaise(recent.flatMap((r) => (r.totals.calculated ? [r.totals.calculated.paise] : [])));
+  const topText = recent.find((r) => r.totals.calculated?.paise === top)?.totals.calculated?.inr;
+  const shown = active === null ? null : recent[active];
   return (
-    <div className="history-chart" role="img" aria-label="Total payable of recent runs">
-      {recent.map((run, i) => {
-        const v = values[i] ?? null;
-        return (
-          <a
-            key={run.run_id}
-            href={`#/runs/${run.run_id}`}
-            className={`hbar hbar-${run.outcome}${v === null ? " hbar-missing" : ""}`}
-            style={{ animationDelay: `${i * 40}ms` }}
-            title={`#${run.run_id} ${run.bill_id}: ${run.totals.calculated?.inr ?? "MISSING"}`}
+    <div className="history" onMouseLeave={() => setActive(null)}>
+      <div className="history-axis" aria-hidden="true">
+        <span>{topText ?? ""}</span>
+        <span>₹0</span>
+      </div>
+      <div className="history-chart" role="list" aria-label="Total payable of recent runs">
+        {recent.map((run, i) => {
+          const v = values[i] ?? null;
+          const total = run.totals.calculated?.inr ?? "MISSING";
+          return (
+            <a
+              key={run.run_id}
+              role="listitem"
+              href={`#/runs/${run.run_id}`}
+              className={`hbar hbar-${run.outcome}${v === null ? " hbar-missing" : ""}${active === i ? " active" : ""}`}
+              style={{ animationDelay: `${i * 40}ms` }}
+              aria-label={`Run ${run.run_id}, ${run.bill_id}: total payable ${total}, ${OUTCOME_TEXT[run.outcome]}`}
+              onMouseEnter={() => setActive(i)}
+              onFocus={() => setActive(i)}
+              onBlur={() => setActive(null)}
+            >
+              <span className="hbar-fill" style={{ height: v === null ? "10%" : `${Math.max(4, (v / max) * 100)}%` }} />
+              <span className="hbar-label">#{run.run_id}</span>
+            </a>
+          );
+        })}
+        {shown && active !== null && (
+          <div
+            className={`chart-tip ${active < recent.length / 3 ? "right" : active < (2 * recent.length) / 3 ? "mid" : "left"}`}
+            style={{ left: `${((active + 0.5) / recent.length) * 100}%` }}
+            role="status"
           >
-            <span className="hbar-fill" style={{ height: v === null ? "10%" : `${Math.max(4, (v / max) * 100)}%` }} />
-            <span className="hbar-label">#{run.run_id}</span>
-          </a>
-        );
-      })}
+            <strong>
+              #{shown.run_id} {shown.bill_id}
+            </strong>
+            <span className="tip-row">
+              <span>Total payable</span>
+              <b className={shown.totals.calculated ? "" : "tip-missing"}>{shown.totals.calculated?.inr ?? "MISSING"}</b>
+            </span>
+            {shown.command === "reconcile" && (
+              <>
+                <span className="tip-row">
+                  <span>Printed</span>
+                  <b>{shown.totals.printed?.inr ?? "Not given or missing"}</b>
+                </span>
+                <span className="tip-row">
+                  <span>Difference</span>
+                  <b>{shown.totals.difference?.inr ?? "Not determinable"}</b>
+                </span>
+              </>
+            )}
+            <span className={`tip-outcome tip-${shown.outcome}`}>{OUTCOME_TEXT[shown.outcome]}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+const OUTCOME_TEXT: Record<RunSummary["outcome"], string> = {
+  clean: "Clean: every line matches",
+  "not-clean": "Needs review",
+  calculated: "Calculated only",
+};

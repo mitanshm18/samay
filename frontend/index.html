@@ -4,7 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SAMAY: industrial electricity bill recalculation and reconciliation" />
+    <meta name="color-scheme" content="dark light" />
     <title>SAMAY · Bill reconciliation</title>
+    <script>
+      // Apply the saved theme before the first paint (see src/theme.ts).
+      (function () {
+        var pref = "system";
+        try {
+          var saved = localStorage.getItem("samay-theme");
+          if (saved === "light" || saved === "dark" || saved === "system") pref = saved;
+        } catch (e) {}
+        var light = pref === "light" ||
+          (pref === "system" && window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+        document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
+        document.documentElement.setAttribute("data-theme-pref", pref);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

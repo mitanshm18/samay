@@ -23,10 +23,12 @@ from samay.optimise import (
     Kind,
     OptimisationReport,
     Recommendation,
+    Saving,
     SavingStatus,
     optimisation_document,
     optimise,
 )
+from samay.optimise import document as document_module
 from samay.tariffs import TodRate
 from samay.tariffs.model import SourceRef
 
@@ -362,3 +364,22 @@ def test_high_peak_share_and_missing_total_kvah() -> None:
     item = rec(run(set_reading(data, "kvah", None)), "load-shift")
     assert item.title == "Shift flexible load out of peak hours"
     assert "of the month" not in item.finding
+
+
+def test_saving_share_of_bill_is_exact_text() -> None:
+    document = optimisation_document(example("golden-gb2.json"))
+    shares = {r["key"]: r["saving"]["share_of_bill"] for r in document["recommendations"]}
+    # 3,898,100 / 88,758,100 paise = 4.39...% -> 4.4%
+    assert shares["excess-demand"] == "4.4%"
+    assert shares["trend"] is None
+    gb3 = optimisation_document(example("golden-gb3.json"))
+    assert all(r["saving"]["share_of_bill"] is None for r in gb3["recommendations"])
+
+
+@pytest.mark.parametrize(
+    ("current", "scenario", "share"),
+    [(10_000, 10_050, "-0.5%"), (0, 0, None), (1_000, 995, "0.5%"), (1_000, 996, "0.4%")],
+)
+def test_share_of_bill_rounding_and_edges(current: int, scenario: int, share: str | None) -> None:
+    saving = Saving(SavingStatus.ILLUSTRATIVE, "note", Money(current), Money(scenario), "s")
+    assert document_module._share_of_bill(saving) == share

@@ -9,6 +9,7 @@ import differing from "../test/fixtures/run-differing.json";
 import missing from "../test/fixtures/run-missing-data.json";
 import passThrough from "../test/fixtures/run-pass-through.json";
 import runs from "../test/fixtures/runs.json";
+import gb2Optimisation from "../test/fixtures/optimisation-gb2.json";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -89,6 +90,44 @@ describe("dashboard", () => {
     const row = screen.getByText("EXAMPLE-MISSING-DATA").closest("tr") as HTMLElement;
     expect(within(row).getAllByText("MISSING").length).toBeGreaterThan(0);
     expect(within(row).queryByText("₹0.00")).toBeNull();
+  });
+});
+
+describe("dashboard insight and chart", () => {
+  const latest = runs.runs[0]!.run_id;
+  const routes = () => ({
+    "/api/runs?limit=100": [200, runs] as [number, unknown],
+    [`/api/runs/${latest}/optimisation`]: [200, { ...gb2Optimisation, run_id: latest }] as [number, unknown],
+  });
+
+  it("keeps optimisation insight apart from the audit and labels it illustrative", async () => {
+    mockApi(routes());
+    render(<Dashboard />);
+    const insight = (await screen.findByText("Open cost optimisation →")).closest("a") as HTMLElement;
+    expect(insight.getAttribute("href")).toBe(`#/runs/${latest}/optimisation`);
+    expect(within(insight).getByText("₹53,072.00")).toBeTruthy();
+    expect(within(insight).getByText(/not a real saving/)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "What the bills say" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Where the next bill could cost less" })).toBeTruthy();
+  });
+
+  it("shows a tooltip with the API's own amounts, and MISSING for a missing total", async () => {
+    mockApi(routes());
+    render(<Dashboard />);
+    await screen.findByText("EXAMPLE-MISSING-DATA");
+    const missingRun = runs.runs.find((r) => r.totals.calculated === null)!;
+    const bar = screen.getByRole("listitem", { name: new RegExp(`^Run ${missingRun.run_id},`) });
+    fireEvent.focus(bar);
+    const tip = screen.getByRole("status");
+    expect(tip.textContent).toContain("MISSING");
+    expect(tip.textContent).not.toContain("₹0.00Printed");
+  });
+
+  it("welcomes a first-time user when there is no history", async () => {
+    mockApi({ "/api/runs?limit=100": [200, { runs: [] }] });
+    render(<Dashboard />);
+    expect(await screen.findByRole("heading", { name: "No bills checked yet." })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Check your first bill" }).getAttribute("href")).toBe("#/new");
   });
 });
 

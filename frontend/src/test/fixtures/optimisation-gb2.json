@@ -74,7 +74,8 @@
         "amount": {
           "paise": "3898100",
           "inr": "\u20b938,981.00"
-        }
+        },
+        "share_of_bill": "4.4%"
       },
       "metrics": [
         {
@@ -129,7 +130,8 @@
         "amount": {
           "paise": "5307200",
           "inr": "\u20b953,072.00"
-        }
+        },
+        "share_of_bill": "6.0%"
       },
       "metrics": [
         {
@@ -181,7 +183,8 @@
         "amount": {
           "paise": "400700",
           "inr": "\u20b94,007.00"
-        }
+        },
+        "share_of_bill": "0.5%"
       },
       "metrics": [
         {
@@ -224,7 +227,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [
@@ -248,7 +252,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [],
@@ -270,7 +275,8 @@
         "scenario": null,
         "current_total": null,
         "scenario_total": null,
-        "amount": null
+        "amount": null,
+        "share_of_bill": null
       },
       "metrics": [],
       "basis": [],
