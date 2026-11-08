@@ -3,9 +3,7 @@
 Industrial electricity cost intelligence for Indian manufacturers.
 Yuva Yodha Energy Tech Hackathon 2026, Challenge 04 (Smart Manufacturing). Team IdeaForge.
 
-SAMAY reads a factory's electricity bill and production schedule, recomputes the bill
-from the tariff rules, explains every rupee, and shows which batch timings would cost less.
-Every number on screen comes from a real calculation, with its source and assumptions visible.
+SAMAY processes structured factory electricity bill data, recomputes it from the tariff rules, reconciles every line with the printed bill, and shows illustrative what-if savings for the levers the bill reveals. Every number on screen comes from a real calculation, with its source and assumptions visible. Production-schedule optimisation (which batch timings would cost less) is planned for a later milestone and is not built yet.
 
 > **Status:** Milestone 1, Step 7 (demo readiness) plus cost optimisation. Bills can be
 > recalculated, reconciled with the printed bill, analysed for savings, saved and shown again, from the command line, the
