@@ -11,6 +11,15 @@ SAMAY processes structured factory electricity bill data, recomputes it from the
 > To run the demo, see [docs/demo.md](docs/demo.md).
 > The tariff used in Milestone 1 is **SAMAY-DEMO-1 (SYNTHETIC — not UP rates)**.
 
+## Team
+
+| Role | Name |
+| --- | --- |
+| Team Leader | Mitansh Mathur |
+| Team Member | Daksh Sehgal |
+
+Team IdeaForge, IIIT Allahabad. Challenge 4 – Smart Manufacturing, Schneider Electric Yuva Yodha 2026.
+
 ## What is in the repository now
 
 | Path | Purpose |
@@ -24,6 +33,43 @@ SAMAY processes structured factory electricity bill data, recomputes it from the
 | `backend/src/samay/db/`, `backend/migrations/` | Saved bills and reports in SAMAY's database, `python -m samay.db` |
 | `backend/src/samay/api/` | Local HTTP API over the saved bills (`make api`) |
 | `frontend/` | Local web page over the API: bill history, check a bill, line-by-line report, cost optimisation (`make web`) |
+
+## Prerequisites
+
+SAMAY is a local prototype. It runs on your own machine, at `127.0.0.1` only, and it is not deployed or production-ready. It has been developed on macOS and checked from a clean clone on Linux.
+
+- **git**, **bash** and **make**. The Makefile is written for GNU make 3.81, which ships with macOS.
+- **Python 3.13 or newer.** `backend/pyproject.toml` requires `>=3.13`. The Makefile sets `UV_PYTHON_DOWNLOADS=never`, so Python 3.13 must already be installed.
+- **uv.** It installs the exact backend packages from `backend/uv.lock` into `backend/.venv`.
+- **Node.js 22 or newer, and npm.** These are the versions CI uses. Frontend packages go into `frontend/node_modules`.
+- **Docker with the Compose v2 plugin** (`docker compose`), and the **`postgres:16` image**. SAMAY never downloads images itself (`pull_policy: never`), so pull the image once with `docker pull postgres:16`.
+- **At least 20 GB of free disk.** `make db-up` refuses to start below that.
+- **Free local ports:** 55432 (database), 8000 (API) and 5173 (web page).
+
+## Quick start (runs locally)
+
+```bash
+git clone https://github.com/mitanshm18/samay.git
+cd samay
+cp .env.example .env      # local settings: postgres:16 image, database port 55432
+docker pull postgres:16   # once; SAMAY never downloads images itself
+make db-up                # start SAMAY's own database on 127.0.0.1:55432
+make db-migrate           # create its tables
+make api                  # API on http://127.0.0.1:8000; leave it running
+```
+
+In a second terminal, from the same folder:
+
+```bash
+make web-install          # once: frontend packages
+make web                  # then open http://127.0.0.1:5173
+```
+
+- **Optional, in a third terminal:**
+  - `make demo-check` sends every sample bill through the running app. It saves one run per bill.
+  - `make check` runs the tests (no Docker needed).
+- **To stop:** press Ctrl-C in both terminals, then run `make db-down`. Saved data is kept.
+- **Demo data:** all sample bills and the SAMAY-DEMO-1 tariff are synthetic, and the savings shown are illustrative. For the full walkthrough, see [docs/demo.md](docs/demo.md).
 
 ## First-time setup on a Mac (read-only)
 
@@ -40,7 +86,9 @@ docker image ls postgres
 ```
 
 Open `.env` and set `SAMAY_PG_IMAGE` to the exact `REPOSITORY:TAG` shown by the last
-command (for example `postgres:16`). Then run the read-only doctor:
+command (for example `postgres:16`). If no `postgres:16` image is listed, run
+`docker pull postgres:16` once; SAMAY never downloads images itself. Then run the
+read-only doctor:
 
 ```bash
 make doctor
@@ -78,3 +126,12 @@ make db-down              # stop the database; saved data is kept
 - No fake functionality: a feature that is not built is not shown.
 - Docker isolation: SAMAY only ever touches resources named `samay*`.
   See [docs/docker-safety.md](docs/docker-safety.md).
+
+## Licence and use
+
+Copyright © 2026 Team IdeaForge (Mitansh Mathur and Daksh Sehgal). All rights reserved.
+
+This repository is proprietary. No licence is granted to use, copy, modify or
+distribute this code. Access is provided only for evaluation in the Schneider Electric
+Yuva Yodha 2026 hackathon. The libraries SAMAY depends on remain under their own
+licences.
