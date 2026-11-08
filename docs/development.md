@@ -2,7 +2,7 @@
 
 ## Requirements (already on the development Mac)
 
-git, Python 3.12 or newer (3.13 in use), uv, Node 22 or newer, npm, Docker Desktop
+git, Python 3.13 or newer, uv, Node 22 or newer, npm, Docker Desktop
 with Compose, and the PostgreSQL 16 image. `make doctor` checks all of them without
 changing anything.
 

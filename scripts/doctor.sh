@@ -19,7 +19,7 @@ fi
 
 MIN_FREE_GB=20      # hard stop agreed for SAMAY
 WARN_FREE_GB=25
-MIN_PYTHON="3.12"
+MIN_PYTHON="3.13"   # must match requires-python in backend/pyproject.toml
 MIN_NODE="22"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -101,8 +101,11 @@ if have git; then ok "git $(git --version | awk '{print $3}')"; else fail "git n
 
 if have python3; then
   py_ver="$(python3 -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])')"
+  # A FAIL on a developer Mac. On CI it is a WARN: the "checks" job uses the
+  # runner's own python3 for the standard-library helper scripts only, while the
+  # backend job installs Python 3.13 itself.
   if version_ge "$py_ver" "$MIN_PYTHON"; then ok "python3 $py_ver"
-  else fail "python3 $py_ver is older than $MIN_PYTHON"; fi
+  else need "python3 $py_ver is older than $MIN_PYTHON (backend requires >=$MIN_PYTHON)"; fi
 else
   fail "python3 not found"
 fi
